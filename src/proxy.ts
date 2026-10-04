@@ -39,11 +39,12 @@ export function proxy(req: NextRequest) {
     ) {
       // Next's proxy requires an absolute Location. Preserve the public host
       // and HTTPS scheme when Railway forwards to the internal HTTP server.
-      const login = req.nextUrl.clone();
-      login.host = req.headers.get('host') ?? login.host;
-      if (req.headers.get('x-forwarded-proto') === 'https') login.protocol = 'https:';
-      login.pathname = '/preview';
-      login.search = '';
+      const protocol =
+        req.headers.get('x-forwarded-proto') === 'https' ? 'https:' : req.nextUrl.protocol;
+      const login = new URL(
+        '/preview',
+        `${protocol}//${req.headers.get('host') ?? req.nextUrl.host}`,
+      );
       login.searchParams.set('next', req.nextUrl.pathname + req.nextUrl.search);
       return NextResponse.redirect(login, { status: 307, headers });
     }

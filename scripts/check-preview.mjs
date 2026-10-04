@@ -67,6 +67,17 @@ try {
       app: 'Praxis',
     });
   });
+  await check(
+    'Proxy redirects preserve the public HTTPS origin without leaking the internal port',
+    async () => {
+      const response = await guest.request.get('/start', {
+        maxRedirects: 0,
+        headers: { Host: 'preview.example', 'X-Forwarded-Proto': 'https' },
+      });
+      assert.equal(response.status(), 307);
+      assert.equal(response.headers().location, 'https://preview.example/preview?next=%2Fstart');
+    },
+  );
   const errors = [];
   page.on('pageerror', (e) => errors.push(e.message));
   await check('Login rejects cross-origin submissions and incorrect passwords', async () => {
