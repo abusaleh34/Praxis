@@ -1,0 +1,19 @@
+services:
+  postgres:
+    image: postgres:17-alpine@sha256:b0f9560a2de083e2cc7382e75f808c7381a32852a7ec49117deedb300e552b24
+    environment:
+      POSTGRES_DB: praxis
+      POSTGRES_USER: praxis
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Run npm run setup:local}
+    ports:
+      - "127.0.0.1:55432:5432"
+    volumes:
+      - praxis-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U praxis -d praxis"]
+      interval: 2s
+      timeout: 2s
+      retries: 20
+    restart: unless-stopped
+volumes:
+  praxis-data:

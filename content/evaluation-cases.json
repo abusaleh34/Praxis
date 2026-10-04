@@ -1,0 +1,1052 @@
+[
+  {
+    "questionId": "practice-01",
+    "wrongChoice": 1,
+    "wrongValue": 75,
+    "expectedMisconception": "هذا مجموع الزاويتين المعلومتين، وليس الزاوية المتبقية.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-01",
+    "wrongChoice": 2,
+    "wrongValue": 285,
+    "expectedMisconception": "360° تخص دورة كاملة؛ المثلث مجموع زواياه 180°.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-01",
+    "wrongChoice": 3,
+    "wrongValue": 150,
+    "expectedMisconception": "لقد طرحت زاوية واحدة فقط.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-02",
+    "wrongChoice": 0,
+    "wrongValue": 150,
+    "expectedMisconception": "هذه قيمة زاويتي القاعدة معًا؛ المطلوب زاوية واحدة.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-02",
+    "wrongChoice": 2,
+    "wrongValue": 15,
+    "expectedMisconception": "نصف زاوية الرأس لا يعطي زاوية القاعدة.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-02",
+    "wrongChoice": 3,
+    "wrongValue": 30,
+    "expectedMisconception": "تساوي الساقين لا يعني أن زاوية الرأس تساوي القاعدة.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-03",
+    "wrongChoice": 0,
+    "wrongValue": 145,
+    "expectedMisconception": "هذه الزاوية المكملة؛ المطلوب زاوية متناظرة وليست مجاورة.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-03",
+    "wrongChoice": 1,
+    "wrongValue": 17.5,
+    "expectedMisconception": "التناظر لا يقتضي تنصيف الزاوية.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-03",
+    "wrongChoice": 3,
+    "wrongValue": 125,
+    "expectedMisconception": "لا توجد هنا علاقة تقتضي إضافة زاوية قائمة.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-04",
+    "wrongChoice": 0,
+    "wrongValue": 110,
+    "expectedMisconception": "هذه الزاوية الداخلية المجاورة، وليست الخارجية.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-04",
+    "wrongChoice": 1,
+    "wrongValue": 150,
+    "expectedMisconception": "لا يكفي استخدام زاوية داخلية واحدة فقط.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-04",
+    "wrongChoice": 2,
+    "wrongValue": 10,
+    "expectedMisconception": "العلاقة هنا مجموع الزاويتين، وليست الفرق بينهما.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-05",
+    "wrongChoice": 1,
+    "wrongValue": 9,
+    "expectedMisconception": "جمع الطول والعرض لا يعطي المساحة.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-05",
+    "wrongChoice": 2,
+    "wrongValue": 23,
+    "expectedMisconception": "راجع العلاقة الهندسية ثم طبّقها على الأرقام المعطاة.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-05",
+    "wrongChoice": 3,
+    "wrongValue": 28,
+    "expectedMisconception": "راجع العلاقة الهندسية ثم طبّقها على الأرقام المعطاة.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-06",
+    "wrongChoice": 0,
+    "wrongValue": 7,
+    "expectedMisconception": "نجمع مربعي الضلعين، لا طوليهما مباشرة.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-06",
+    "wrongChoice": 2,
+    "wrongValue": 25,
+    "expectedMisconception": "وصلت إلى مربع الوتر؛ بقي أخذ الجذر التربيعي.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-06",
+    "wrongChoice": 3,
+    "wrongValue": 1,
+    "expectedMisconception": "فرق الضلعين لا يحدد الوتر.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-07",
+    "wrongChoice": 0,
+    "wrongValue": 50,
+    "expectedMisconception": "الزاوية المحيطية نصف المركزية، وليست مساوية لها.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-07",
+    "wrongChoice": 1,
+    "wrongValue": 100,
+    "expectedMisconception": "لقد ضاعفت الزاوية؛ المطلوب تنصيفها.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-07",
+    "wrongChoice": 3,
+    "wrongValue": 130,
+    "expectedMisconception": "علاقة التكامل ليست العلاقة المستخدمة هنا.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-08",
+    "wrongChoice": 0,
+    "wrongValue": 120,
+    "expectedMisconception": "هذه الزاوية الخارجية؛ المطلوب الداخلية.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-08",
+    "wrongChoice": 1,
+    "wrongValue": 180,
+    "expectedMisconception": "هذا مجموع الزوايا الداخلية؛ المطلوب زاوية واحدة.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-08",
+    "wrongChoice": 2,
+    "wrongValue": 65,
+    "expectedMisconception": "راجع العلاقة الهندسية ثم طبّقها على الأرقام المعطاة.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-09",
+    "wrongChoice": 1,
+    "wrongValue": 80,
+    "expectedMisconception": "هذا مجموع الزاويتين المعلومتين، وليس الزاوية المتبقية.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-09",
+    "wrongChoice": 2,
+    "wrongValue": 280,
+    "expectedMisconception": "360° تخص دورة كاملة؛ المثلث مجموع زواياه 180°.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-09",
+    "wrongChoice": 3,
+    "wrongValue": 147,
+    "expectedMisconception": "لقد طرحت زاوية واحدة فقط.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-10",
+    "wrongChoice": 0,
+    "wrongValue": 140,
+    "expectedMisconception": "هذه قيمة زاويتي القاعدة معًا؛ المطلوب زاوية واحدة.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-10",
+    "wrongChoice": 2,
+    "wrongValue": 20,
+    "expectedMisconception": "نصف زاوية الرأس لا يعطي زاوية القاعدة.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-10",
+    "wrongChoice": 3,
+    "wrongValue": 40,
+    "expectedMisconception": "تساوي الساقين لا يعني أن زاوية الرأس تساوي القاعدة.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-11",
+    "wrongChoice": 0,
+    "wrongValue": 135,
+    "expectedMisconception": "هذه الزاوية المكملة؛ المطلوب زاوية متناظرة وليست مجاورة.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-11",
+    "wrongChoice": 1,
+    "wrongValue": 22.5,
+    "expectedMisconception": "التناظر لا يقتضي تنصيف الزاوية.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-11",
+    "wrongChoice": 3,
+    "wrongValue": 50,
+    "expectedMisconception": "راجع العلاقة الهندسية ثم طبّقها على الأرقام المعطاة.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-12",
+    "wrongChoice": 0,
+    "wrongValue": 105,
+    "expectedMisconception": "هذه الزاوية الداخلية المجاورة، وليست الخارجية.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-12",
+    "wrongChoice": 1,
+    "wrongValue": 147,
+    "expectedMisconception": "لا يكفي استخدام زاوية داخلية واحدة فقط.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-12",
+    "wrongChoice": 2,
+    "wrongValue": 9,
+    "expectedMisconception": "العلاقة هنا مجموع الزاويتين، وليست الفرق بينهما.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-13",
+    "wrongChoice": 1,
+    "wrongValue": 22,
+    "expectedMisconception": "هذه صيغة المحيط؛ المطلوب مساحة السطح.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-13",
+    "wrongChoice": 2,
+    "wrongValue": 11,
+    "expectedMisconception": "جمع الطول والعرض لا يعطي المساحة.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-13",
+    "wrongChoice": 3,
+    "wrongValue": 14,
+    "expectedMisconception": "تنصيف حاصل الضرب يستخدم لمساحة المثلث، وليس المستطيل.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-14",
+    "wrongChoice": 0,
+    "wrongValue": 14,
+    "expectedMisconception": "نجمع مربعي الضلعين، لا طوليهما مباشرة.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-14",
+    "wrongChoice": 2,
+    "wrongValue": 100,
+    "expectedMisconception": "وصلت إلى مربع الوتر؛ بقي أخذ الجذر التربيعي.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-14",
+    "wrongChoice": 3,
+    "wrongValue": 2,
+    "expectedMisconception": "فرق الضلعين لا يحدد الوتر.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-15",
+    "wrongChoice": 0,
+    "wrongValue": 60,
+    "expectedMisconception": "الزاوية المحيطية نصف المركزية، وليست مساوية لها.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-15",
+    "wrongChoice": 1,
+    "wrongValue": 120,
+    "expectedMisconception": "لقد ضاعفت الزاوية؛ المطلوب تنصيفها.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-15",
+    "wrongChoice": 3,
+    "wrongValue": 35,
+    "expectedMisconception": "راجع العلاقة الهندسية ثم طبّقها على الأرقام المعطاة.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-16",
+    "wrongChoice": 0,
+    "wrongValue": 360,
+    "expectedMisconception": "هذا مجموع الزوايا الداخلية؛ المطلوب زاوية واحدة.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-16",
+    "wrongChoice": 1,
+    "wrongValue": 45,
+    "expectedMisconception": "قسمة 180 على عدد الأضلاع ليست العلاقة المطلوبة.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-16",
+    "wrongChoice": 2,
+    "wrongValue": 95,
+    "expectedMisconception": "راجع العلاقة الهندسية ثم طبّقها على الأرقام المعطاة.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-17",
+    "wrongChoice": 1,
+    "wrongValue": 85,
+    "expectedMisconception": "هذا مجموع الزاويتين المعلومتين، وليس الزاوية المتبقية.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-17",
+    "wrongChoice": 2,
+    "wrongValue": 275,
+    "expectedMisconception": "360° تخص دورة كاملة؛ المثلث مجموع زواياه 180°.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-17",
+    "wrongChoice": 3,
+    "wrongValue": 144,
+    "expectedMisconception": "لقد طرحت زاوية واحدة فقط.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-18",
+    "wrongChoice": 0,
+    "wrongValue": 130,
+    "expectedMisconception": "هذه قيمة زاويتي القاعدة معًا؛ المطلوب زاوية واحدة.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-18",
+    "wrongChoice": 2,
+    "wrongValue": 25,
+    "expectedMisconception": "نصف زاوية الرأس لا يعطي زاوية القاعدة.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-18",
+    "wrongChoice": 3,
+    "wrongValue": 50,
+    "expectedMisconception": "تساوي الساقين لا يعني أن زاوية الرأس تساوي القاعدة.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-19",
+    "wrongChoice": 0,
+    "wrongValue": 125,
+    "expectedMisconception": "هذه الزاوية المكملة؛ المطلوب زاوية متناظرة وليست مجاورة.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-19",
+    "wrongChoice": 1,
+    "wrongValue": 27.5,
+    "expectedMisconception": "التناظر لا يقتضي تنصيف الزاوية.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-19",
+    "wrongChoice": 3,
+    "wrongValue": 145,
+    "expectedMisconception": "لا توجد هنا علاقة تقتضي إضافة زاوية قائمة.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-20",
+    "wrongChoice": 0,
+    "wrongValue": 100,
+    "expectedMisconception": "هذه الزاوية الداخلية المجاورة، وليست الخارجية.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-20",
+    "wrongChoice": 1,
+    "wrongValue": 144,
+    "expectedMisconception": "لا يكفي استخدام زاوية داخلية واحدة فقط.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-20",
+    "wrongChoice": 2,
+    "wrongValue": 8,
+    "expectedMisconception": "العلاقة هنا مجموع الزاويتين، وليست الفرق بينهما.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-21",
+    "wrongChoice": 1,
+    "wrongValue": 26,
+    "expectedMisconception": "هذه صيغة المحيط؛ المطلوب مساحة السطح.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-21",
+    "wrongChoice": 2,
+    "wrongValue": 13,
+    "expectedMisconception": "جمع الطول والعرض لا يعطي المساحة.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-21",
+    "wrongChoice": 3,
+    "wrongValue": 20,
+    "expectedMisconception": "تنصيف حاصل الضرب يستخدم لمساحة المثلث، وليس المستطيل.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-22",
+    "wrongChoice": 0,
+    "wrongValue": 17,
+    "expectedMisconception": "نجمع مربعي الضلعين، لا طوليهما مباشرة.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-22",
+    "wrongChoice": 2,
+    "wrongValue": 169,
+    "expectedMisconception": "وصلت إلى مربع الوتر؛ بقي أخذ الجذر التربيعي.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-22",
+    "wrongChoice": 3,
+    "wrongValue": 7,
+    "expectedMisconception": "فرق الضلعين لا يحدد الوتر.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-23",
+    "wrongChoice": 0,
+    "wrongValue": 70,
+    "expectedMisconception": "الزاوية المحيطية نصف المركزية، وليست مساوية لها.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-23",
+    "wrongChoice": 1,
+    "wrongValue": 140,
+    "expectedMisconception": "لقد ضاعفت الزاوية؛ المطلوب تنصيفها.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-23",
+    "wrongChoice": 3,
+    "wrongValue": 110,
+    "expectedMisconception": "علاقة التكامل ليست العلاقة المستخدمة هنا.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-24",
+    "wrongChoice": 0,
+    "wrongValue": 72,
+    "expectedMisconception": "هذه الزاوية الخارجية؛ المطلوب الداخلية.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-24",
+    "wrongChoice": 1,
+    "wrongValue": 540,
+    "expectedMisconception": "هذا مجموع الزوايا الداخلية؛ المطلوب زاوية واحدة.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-24",
+    "wrongChoice": 2,
+    "wrongValue": 36,
+    "expectedMisconception": "قسمة 180 على عدد الأضلاع ليست العلاقة المطلوبة.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-25",
+    "wrongChoice": 1,
+    "wrongValue": 270,
+    "expectedMisconception": "360° تخص دورة كاملة؛ المثلث مجموع زواياه 180°.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-25",
+    "wrongChoice": 2,
+    "wrongValue": 141,
+    "expectedMisconception": "لقد طرحت زاوية واحدة فقط.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-25",
+    "wrongChoice": 3,
+    "wrongValue": 95,
+    "expectedMisconception": "راجع العلاقة الهندسية ثم طبّقها على الأرقام المعطاة.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-26",
+    "wrongChoice": 0,
+    "wrongValue": 120,
+    "expectedMisconception": "هذه قيمة زاويتي القاعدة معًا؛ المطلوب زاوية واحدة.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-26",
+    "wrongChoice": 2,
+    "wrongValue": 30,
+    "expectedMisconception": "نصف زاوية الرأس لا يعطي زاوية القاعدة.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-26",
+    "wrongChoice": 3,
+    "wrongValue": 65,
+    "expectedMisconception": "راجع العلاقة الهندسية ثم طبّقها على الأرقام المعطاة.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-27",
+    "wrongChoice": 0,
+    "wrongValue": 115,
+    "expectedMisconception": "هذه الزاوية المكملة؛ المطلوب زاوية متناظرة وليست مجاورة.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-27",
+    "wrongChoice": 1,
+    "wrongValue": 32.5,
+    "expectedMisconception": "التناظر لا يقتضي تنصيف الزاوية.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-27",
+    "wrongChoice": 3,
+    "wrongValue": 155,
+    "expectedMisconception": "لا توجد هنا علاقة تقتضي إضافة زاوية قائمة.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-28",
+    "wrongChoice": 0,
+    "wrongValue": 95,
+    "expectedMisconception": "هذه الزاوية الداخلية المجاورة، وليست الخارجية.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-28",
+    "wrongChoice": 1,
+    "wrongValue": 141,
+    "expectedMisconception": "لا يكفي استخدام زاوية داخلية واحدة فقط.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-28",
+    "wrongChoice": 2,
+    "wrongValue": 7,
+    "expectedMisconception": "العلاقة هنا مجموع الزاويتين، وليست الفرق بينهما.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-29",
+    "wrongChoice": 1,
+    "wrongValue": 30,
+    "expectedMisconception": "هذه صيغة المحيط؛ المطلوب مساحة السطح.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-29",
+    "wrongChoice": 2,
+    "wrongValue": 15,
+    "expectedMisconception": "جمع الطول والعرض لا يعطي المساحة.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-29",
+    "wrongChoice": 3,
+    "wrongValue": 27,
+    "expectedMisconception": "تنصيف حاصل الضرب يستخدم لمساحة المثلث، وليس المستطيل.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-30",
+    "wrongChoice": 0,
+    "wrongValue": 23,
+    "expectedMisconception": "نجمع مربعي الضلعين، لا طوليهما مباشرة.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-30",
+    "wrongChoice": 2,
+    "wrongValue": 289,
+    "expectedMisconception": "وصلت إلى مربع الوتر؛ بقي أخذ الجذر التربيعي.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-30",
+    "wrongChoice": 3,
+    "wrongValue": 7,
+    "expectedMisconception": "فرق الضلعين لا يحدد الوتر.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-31",
+    "wrongChoice": 0,
+    "wrongValue": 80,
+    "expectedMisconception": "الزاوية المحيطية نصف المركزية، وليست مساوية لها.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-31",
+    "wrongChoice": 1,
+    "wrongValue": 160,
+    "expectedMisconception": "لقد ضاعفت الزاوية؛ المطلوب تنصيفها.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-31",
+    "wrongChoice": 3,
+    "wrongValue": 100,
+    "expectedMisconception": "علاقة التكامل ليست العلاقة المستخدمة هنا.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-32",
+    "wrongChoice": 0,
+    "wrongValue": 60,
+    "expectedMisconception": "هذه الزاوية الخارجية؛ المطلوب الداخلية.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-32",
+    "wrongChoice": 1,
+    "wrongValue": 720,
+    "expectedMisconception": "هذا مجموع الزوايا الداخلية؛ المطلوب زاوية واحدة.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-32",
+    "wrongChoice": 2,
+    "wrongValue": 30,
+    "expectedMisconception": "قسمة 180 على عدد الأضلاع ليست العلاقة المطلوبة.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-33",
+    "wrongChoice": 1,
+    "wrongValue": 95,
+    "expectedMisconception": "هذا مجموع الزاويتين المعلومتين، وليس الزاوية المتبقية.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-33",
+    "wrongChoice": 2,
+    "wrongValue": 265,
+    "expectedMisconception": "360° تخص دورة كاملة؛ المثلث مجموع زواياه 180°.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-33",
+    "wrongChoice": 3,
+    "wrongValue": 138,
+    "expectedMisconception": "لقد طرحت زاوية واحدة فقط.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-34",
+    "wrongChoice": 0,
+    "wrongValue": 110,
+    "expectedMisconception": "هذه قيمة زاويتي القاعدة معًا؛ المطلوب زاوية واحدة.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-34",
+    "wrongChoice": 2,
+    "wrongValue": 35,
+    "expectedMisconception": "نصف زاوية الرأس لا يعطي زاوية القاعدة.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-34",
+    "wrongChoice": 3,
+    "wrongValue": 70,
+    "expectedMisconception": "تساوي الساقين لا يعني أن زاوية الرأس تساوي القاعدة.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-35",
+    "wrongChoice": 0,
+    "wrongValue": 105,
+    "expectedMisconception": "هذه الزاوية المكملة؛ المطلوب زاوية متناظرة وليست مجاورة.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-35",
+    "wrongChoice": 1,
+    "wrongValue": 37.5,
+    "expectedMisconception": "التناظر لا يقتضي تنصيف الزاوية.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-35",
+    "wrongChoice": 3,
+    "wrongValue": 165,
+    "expectedMisconception": "لا توجد هنا علاقة تقتضي إضافة زاوية قائمة.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-36",
+    "wrongChoice": 0,
+    "wrongValue": 138,
+    "expectedMisconception": "لا يكفي استخدام زاوية داخلية واحدة فقط.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-36",
+    "wrongChoice": 1,
+    "wrongValue": 6,
+    "expectedMisconception": "العلاقة هنا مجموع الزاويتين، وليست الفرق بينهما.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-36",
+    "wrongChoice": 2,
+    "wrongValue": 95,
+    "expectedMisconception": "راجع العلاقة الهندسية ثم طبّقها على الأرقام المعطاة.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-37",
+    "wrongChoice": 1,
+    "wrongValue": 34,
+    "expectedMisconception": "هذه صيغة المحيط؛ المطلوب مساحة السطح.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-37",
+    "wrongChoice": 2,
+    "wrongValue": 17,
+    "expectedMisconception": "جمع الطول والعرض لا يعطي المساحة.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-37",
+    "wrongChoice": 3,
+    "wrongValue": 35,
+    "expectedMisconception": "تنصيف حاصل الضرب يستخدم لمساحة المثلث، وليس المستطيل.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-38",
+    "wrongChoice": 0,
+    "wrongValue": 21,
+    "expectedMisconception": "نجمع مربعي الضلعين، لا طوليهما مباشرة.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-38",
+    "wrongChoice": 2,
+    "wrongValue": 225,
+    "expectedMisconception": "وصلت إلى مربع الوتر؛ بقي أخذ الجذر التربيعي.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-38",
+    "wrongChoice": 3,
+    "wrongValue": 3,
+    "expectedMisconception": "فرق الضلعين لا يحدد الوتر.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-39",
+    "wrongChoice": 0,
+    "wrongValue": 90,
+    "expectedMisconception": "الزاوية المحيطية نصف المركزية، وليست مساوية لها.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-39",
+    "wrongChoice": 1,
+    "wrongValue": 180,
+    "expectedMisconception": "لقد ضاعفت الزاوية؛ المطلوب تنصيفها.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-39",
+    "wrongChoice": 3,
+    "wrongValue": 50,
+    "expectedMisconception": "راجع العلاقة الهندسية ثم طبّقها على الأرقام المعطاة.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-40",
+    "wrongChoice": 0,
+    "wrongValue": 45,
+    "expectedMisconception": "هذه الزاوية الخارجية؛ المطلوب الداخلية.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-40",
+    "wrongChoice": 1,
+    "wrongValue": 1080,
+    "expectedMisconception": "هذا مجموع الزوايا الداخلية؛ المطلوب زاوية واحدة.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-40",
+    "wrongChoice": 2,
+    "wrongValue": 22.5,
+    "expectedMisconception": "قسمة 180 على عدد الأضلاع ليست العلاقة المطلوبة.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-41",
+    "wrongChoice": 1,
+    "wrongValue": 100,
+    "expectedMisconception": "هذا مجموع الزاويتين المعلومتين، وليس الزاوية المتبقية.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-41",
+    "wrongChoice": 2,
+    "wrongValue": 260,
+    "expectedMisconception": "360° تخص دورة كاملة؛ المثلث مجموع زواياه 180°.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-41",
+    "wrongChoice": 3,
+    "wrongValue": 135,
+    "expectedMisconception": "لقد طرحت زاوية واحدة فقط.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-42",
+    "wrongChoice": 0,
+    "wrongValue": 100,
+    "expectedMisconception": "هذه قيمة زاويتي القاعدة معًا؛ المطلوب زاوية واحدة.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-42",
+    "wrongChoice": 2,
+    "wrongValue": 40,
+    "expectedMisconception": "نصف زاوية الرأس لا يعطي زاوية القاعدة.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-42",
+    "wrongChoice": 3,
+    "wrongValue": 80,
+    "expectedMisconception": "تساوي الساقين لا يعني أن زاوية الرأس تساوي القاعدة.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-43",
+    "wrongChoice": 0,
+    "wrongValue": 95,
+    "expectedMisconception": "هذه الزاوية المكملة؛ المطلوب زاوية متناظرة وليست مجاورة.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-43",
+    "wrongChoice": 1,
+    "wrongValue": 42.5,
+    "expectedMisconception": "التناظر لا يقتضي تنصيف الزاوية.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-43",
+    "wrongChoice": 3,
+    "wrongValue": 175,
+    "expectedMisconception": "لا توجد هنا علاقة تقتضي إضافة زاوية قائمة.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-44",
+    "wrongChoice": 0,
+    "wrongValue": 85,
+    "expectedMisconception": "هذه الزاوية الداخلية المجاورة، وليست الخارجية.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-44",
+    "wrongChoice": 1,
+    "wrongValue": 135,
+    "expectedMisconception": "لا يكفي استخدام زاوية داخلية واحدة فقط.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-44",
+    "wrongChoice": 2,
+    "wrongValue": 5,
+    "expectedMisconception": "العلاقة هنا مجموع الزاويتين، وليست الفرق بينهما.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-45",
+    "wrongChoice": 1,
+    "wrongValue": 28,
+    "expectedMisconception": "هذه صيغة المحيط؛ المطلوب مساحة السطح.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-45",
+    "wrongChoice": 2,
+    "wrongValue": 14,
+    "expectedMisconception": "جمع الطول والعرض لا يعطي المساحة.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-45",
+    "wrongChoice": 3,
+    "wrongValue": 16.5,
+    "expectedMisconception": "تنصيف حاصل الضرب يستخدم لمساحة المثلث، وليس المستطيل.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-46",
+    "wrongChoice": 0,
+    "wrongValue": 28,
+    "expectedMisconception": "نجمع مربعي الضلعين، لا طوليهما مباشرة.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-46",
+    "wrongChoice": 2,
+    "wrongValue": 400,
+    "expectedMisconception": "وصلت إلى مربع الوتر؛ بقي أخذ الجذر التربيعي.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-46",
+    "wrongChoice": 3,
+    "wrongValue": 4,
+    "expectedMisconception": "فرق الضلعين لا يحدد الوتر.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-47",
+    "wrongChoice": 0,
+    "wrongValue": 100,
+    "expectedMisconception": "الزاوية المحيطية نصف المركزية، وليست مساوية لها.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-47",
+    "wrongChoice": 1,
+    "wrongValue": 200,
+    "expectedMisconception": "لقد ضاعفت الزاوية؛ المطلوب تنصيفها.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-47",
+    "wrongChoice": 3,
+    "wrongValue": 80,
+    "expectedMisconception": "علاقة التكامل ليست العلاقة المستخدمة هنا.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-48",
+    "wrongChoice": 0,
+    "wrongValue": 40,
+    "expectedMisconception": "هذه الزاوية الخارجية؛ المطلوب الداخلية.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-48",
+    "wrongChoice": 1,
+    "wrongValue": 1260,
+    "expectedMisconception": "هذا مجموع الزوايا الداخلية؛ المطلوب زاوية واحدة.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-48",
+    "wrongChoice": 2,
+    "wrongValue": 20,
+    "expectedMisconception": "قسمة 180 على عدد الأضلاع ليست العلاقة المطلوبة.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-49",
+    "wrongChoice": 1,
+    "wrongValue": 105,
+    "expectedMisconception": "هذا مجموع الزاويتين المعلومتين، وليس الزاوية المتبقية.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-49",
+    "wrongChoice": 2,
+    "wrongValue": 255,
+    "expectedMisconception": "360° تخص دورة كاملة؛ المثلث مجموع زواياه 180°.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-49",
+    "wrongChoice": 3,
+    "wrongValue": 132,
+    "expectedMisconception": "لقد طرحت زاوية واحدة فقط.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-50",
+    "wrongChoice": 0,
+    "wrongValue": 90,
+    "expectedMisconception": "هذه قيمة زاويتي القاعدة معًا؛ المطلوب زاوية واحدة.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-50",
+    "wrongChoice": 2,
+    "wrongValue": 50,
+    "expectedMisconception": "راجع العلاقة الهندسية ثم طبّقها على الأرقام المعطاة.",
+    "status": "needs-human-review"
+  },
+  {
+    "questionId": "practice-50",
+    "wrongChoice": 3,
+    "wrongValue": 55,
+    "expectedMisconception": "راجع العلاقة الهندسية ثم طبّقها على الأرقام المعطاة.",
+    "status": "needs-human-review"
+  }
+]
