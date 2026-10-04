@@ -17,12 +17,6 @@ const browser = await chromium.launch({
 const guest = await browser.newContext({ baseURL: base });
 const member = await browser.newContext({
   baseURL: base,
-  httpCredentials: {
-    username: 'praxis',
-    password: process.env.PRAXIS_PREVIEW_PASSWORD,
-    send: 'always',
-  },
-  extraHTTPHeaders: { Origin: base },
 });
 let enrolled = false;
 let passed = 0;
@@ -48,9 +42,15 @@ async function call(path, data) {
   return response.body;
 }
 try {
-  await check('Guests cannot read pages or application APIs', async () => {
-    for (const path of ['/', '/start', '/admin', '/api/config'])
-      assert.equal((await guest.request.get(path)).status(), 401);
+  await check('Guests see an in-site login, while APIs stay protected', async () => {
+    for (const path of ['/', '/start', '/admin']) {
+      const response = await guest.request.get(path, { maxRedirects: 0 });
+      assert.equal(response.status(), 307);
+      assert.equal(new URL(response.headers().location).origin, base);
+      assert.equal(new URL(response.headers().location).pathname, '/preview');
+      assert(!response.headers()['www-authenticate']);
+    }
+    assert.equal((await guest.request.get('/api/config')).status(), 401);
     assert.equal(
       (
         await guest.request.post('/api/enroll', {
@@ -69,15 +69,37 @@ try {
   });
   const errors = [];
   page.on('pageerror', (e) => errors.push(e.message));
-  await check('Browser authenticates and loads protected JavaScript and fonts', async () => {
+  await check('Login rejects cross-origin submissions and incorrect passwords', async () => {
+    const response = await guest.request.post('/preview', {
+      headers: { Origin: 'https://untrusted.example' },
+      form: { password: process.env.PRAXIS_PREVIEW_PASSWORD },
+    });
+    assert.equal(response.status(), 403);
     await page.goto('/start');
-    await page.getByRole('checkbox').waitFor();
-    const script = await page.locator('script[src]').first().getAttribute('src');
-    assert(script);
-    assert.equal((await guest.request.get(script)).status(), 401);
-    assert.equal((await member.request.get(script)).status(), 200);
-    assert.deepEqual(errors, []);
+    await page.getByLabel('كلمة مرور المعاينة').fill('incorrect-password');
+    await page.getByRole('button', { name: 'دخول المعاينة' }).click();
+    await page.getByRole('alert').waitFor();
+    assert(!(await member.cookies()).some((c) => c.name === 'praxis_preview'));
   });
+  await check(
+    'In-site login persists and loads protected JavaScript without browser authentication',
+    async () => {
+      await page.getByLabel('كلمة مرور المعاينة').fill(process.env.PRAXIS_PREVIEW_PASSWORD);
+      await page.getByRole('button', { name: 'دخول المعاينة' }).click();
+      await page.waitForURL('**/start');
+      await page.getByRole('checkbox').waitFor();
+      const cookie = (await member.cookies()).find((c) => c.name === 'praxis_preview');
+      assert(cookie?.secure && cookie.httpOnly && cookie.sameSite === 'Lax');
+      assert(!(await page.evaluate(() => document.cookie)).includes('praxis_preview'));
+      await page.reload();
+      await page.getByRole('checkbox').waitFor();
+      const script = await page.locator('script[src]').first().getAttribute('src');
+      assert(script);
+      assert.equal((await guest.request.get(script)).status(), 401);
+      assert.equal(await page.evaluate(async (url) => (await fetch(url)).status, script), 200);
+      assert.deepEqual(errors, []);
+    },
+  );
   await check(
     'Enrollment, secure session cookie, and protected student dashboard work',
     async () => {
@@ -126,6 +148,14 @@ try {
       assert.deepEqual(errors, []);
     },
   );
+  await check('Tampered preview cookies do not open protected pages', async () => {
+    const cookie = (await member.cookies()).find((c) => c.name === 'praxis_preview');
+    await guest.addCookies([{ ...cookie, value: cookie.value + 'tampered' }]);
+    const guestPage = await guest.newPage();
+    await guestPage.goto('/admin');
+    await guestPage.getByLabel('كلمة مرور المعاينة').waitFor();
+    await guestPage.close();
+  });
   console.log(`${passed} private preview checks passed.`);
 } finally {
   try {

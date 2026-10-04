@@ -1,17 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { previewAccess } from './lib/preview-access';
+import {
+  PREVIEW_COOKIE,
+  previewAccess,
+  previewRequired,
+  validPreviewSession,
+} from './lib/preview-access';
 
 export function proxy(req: NextRequest) {
-  const required =
-    process.env.PRAXIS_PREVIEW_REQUIRED === 'true' ||
-    Boolean(
-      process.env.RAILWAY_ENVIRONMENT_ID &&
-        (!process.env.PRAXIS_MODE || process.env.PRAXIS_MODE === 'development'),
-    );
   const access = previewAccess(
     req.headers.get('authorization'),
     process.env.PRAXIS_PREVIEW_PASSWORD,
-    required,
+    previewRequired(),
   );
   if (access === 'unconfigured') {
     return new NextResponse('المعاينة غير جاهزة بعد.', {
@@ -21,16 +20,34 @@ export function proxy(req: NextRequest) {
   }
   // Railway probes database readiness without browser credentials.
   if (req.method === 'GET' && req.nextUrl.pathname === '/api/health') return NextResponse.next();
-  if (access === 'unauthorized') {
-    return new NextResponse('هذه معاينة خاصة. أدخل بيانات الدخول للمتابعة.', {
-      status: 401,
-      headers: {
-        'WWW-Authenticate': 'Basic realm="Praxis preview", charset="UTF-8"',
-        'Cache-Control': 'no-store',
-        'Content-Type': 'text/plain; charset=utf-8',
-        'X-Robots-Tag': 'noindex, nofollow, noarchive',
-      },
-    });
+  if (
+    access === 'unauthorized' &&
+    req.nextUrl.pathname !== '/preview' &&
+    !validPreviewSession(
+      req.cookies.get(PREVIEW_COOKIE)?.value,
+      process.env.PRAXIS_PREVIEW_PASSWORD,
+    )
+  ) {
+    const headers = {
+      'Cache-Control': 'no-store',
+      'X-Robots-Tag': 'noindex, nofollow, noarchive',
+    };
+    if (
+      ['GET', 'HEAD'].includes(req.method) &&
+      !/^\/(?:api|_next)(?:\/|$)/.test(req.nextUrl.pathname) &&
+      !req.nextUrl.pathname.includes('.')
+    ) {
+      // Next's proxy requires an absolute Location. Preserve the public host
+      // and HTTPS scheme when Railway forwards to the internal HTTP server.
+      const login = req.nextUrl.clone();
+      login.host = req.headers.get('host') ?? login.host;
+      if (req.headers.get('x-forwarded-proto') === 'https') login.protocol = 'https:';
+      login.pathname = '/preview';
+      login.search = '';
+      login.searchParams.set('next', req.nextUrl.pathname + req.nextUrl.search);
+      return NextResponse.redirect(login, { status: 307, headers });
+    }
+    return NextResponse.json({ error: 'يلزم دخول المعاينة.' }, { status: 401, headers });
   }
   const response = NextResponse.next();
   if (access !== 'open') {
