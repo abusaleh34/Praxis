@@ -135,7 +135,9 @@ try {
       while (!state.completed) {
         await call(`/api/sessions/${id}/answer`, {
           questionId: state.question.id,
-          choice: bank.get(state.question.id).answerIndex,
+          choice: state.question.choices.indexOf(
+            bank.get(state.question.id).choices[bank.get(state.question.id).answerIndex],
+          ),
           elapsedMs: 1200,
         });
         state = await call('/api/sessions/' + id);
@@ -143,11 +145,13 @@ try {
       const practice = await call('/api/sessions', { kind: 'practice' });
       state = await call('/api/sessions/' + practice.id);
       const question = bank.get(state.question.id);
-      await call(`/api/sessions/${practice.id}/answer`, {
+      const correctIndex = state.question.choices.indexOf(question.choices[question.answerIndex]);
+      const wrong = await call(`/api/sessions/${practice.id}/answer`, {
         questionId: question.id,
-        choice: (question.answerIndex + 1) % 4,
+        choice: (correctIndex + 1) % 4,
         elapsedMs: 1200,
       });
+      assert.equal(wrong.correct, false);
       const hint = await call(`/api/sessions/${practice.id}/hint`, {
         questionId: question.id,
         stage: 1,

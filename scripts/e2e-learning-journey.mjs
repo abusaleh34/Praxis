@@ -49,7 +49,7 @@ const start = () => page.getByRole('button', { name: 'ابدأ التدريب', 
 const state = () => call('/api/mentor?id=' + new URL(page.url()).searchParams.get('batch'));
 try {
   await page.goto('/mentor');
-  if (hosted) {
+  if (hosted || new URL(page.url()).pathname === '/preview') {
     if (!process.env.PRAXIS_PREVIEW_PASSWORD) throw new Error('Preview credential required');
     await page.locator('input[type=password]').fill(process.env.PRAXIS_PREVIEW_PASSWORD);
     await page.locator('button[type=submit]').click();
