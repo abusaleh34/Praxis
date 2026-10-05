@@ -3,6 +3,7 @@ import { db } from './db';
 import { ApiError } from './auth';
 import { questionMap } from './content';
 import { modelHint } from './model.mjs';
+import { choiceOrder } from './choice-order';
 
 export async function requestHint(
   participantId: string,
@@ -19,6 +20,7 @@ export async function requestHint(
       await tx`SELECT * FROM study_sessions WHERE id=${sessionId} AND participant_id=${participantId} FOR UPDATE`;
     if (!s || s.kind !== 'practice' || s.completed_at)
       throw new ApiError(403, 'التلميحات متاحة داخل جلسة التدريب فقط.');
+    if (choice !== null) choice = choiceOrder(s.id, questionId, s.shuffle_choices)[choice];
     const completed =
       await tx`SELECT question_id FROM attempts WHERE session_id=${sessionId} AND resolved_at IS NOT NULL`;
     const done = new Set(completed.map((a) => a.question_id));

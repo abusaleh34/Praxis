@@ -4,6 +4,7 @@ import { Shell } from '@/components/shell';
 import { Icon } from '@/components/icon';
 import { Geometry } from '@/components/geometry';
 import { useOverview } from '@/components/use-overview';
+import { AccountAccess } from '@/components/account-access';
 export default function Learn() {
   const { data: d, error, busy, begin, router } = useOverview();
   return (
@@ -19,6 +20,7 @@ export default function Learn() {
         </div>
       ) : (
         <>
+          <AccountAccess compact />
           <div className="page-heading">
             <div>
               <span className="hello">أهلًا بعودتك 👋</span>
@@ -27,6 +29,29 @@ export default function Learn() {
             </div>
             <span className="date-tag">مساحتك، على إيقاعك.</span>
           </div>
+          <section className="panel mentor-entry">
+            <span className="badge">جديد · المدرب التفاعلي</span>
+            <h2>الفكرة تتحرك أمامك.</h2>
+            <p>رسوم قابلة للتجربة، شرح خطوة بخطوة، وأسئلة تقودك للحل.</p>
+            <div className="action-row">
+              <Link href="/mentor" className="button primary">
+                افتح المدرّب
+              </Link>
+              <Link href="/challenge" className="button ghost">
+                تدرّب على الوقت
+              </Link>
+              <Link href="/report" className="text-button">
+                تقريرك الأسبوعي ←
+              </Link>
+            </div>
+          </section>
+          <section className="panel adaptive-card">
+            <h2>خطوتك المقترحة: {d.adaptive.recommendation.name}</h2>
+            <p>{d.adaptive.recommendation.reason}</p>
+            <Link href={'/mentor?skill=' + d.adaptive.recommendation.skill} className="text-button">
+              ابدأ تدريبًا موجّهًا ←
+            </Link>
+          </section>
           <section className="dashboard-hero">
             <div className="dashboard-hero-copy">
               <span className="overline">

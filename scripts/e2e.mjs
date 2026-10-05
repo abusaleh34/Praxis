@@ -50,7 +50,7 @@ async function complete(id) {
     const q = bank.get(s.question.id);
     await post(`sessions/${id}/answer`, {
       questionId: q.id,
-      choice: q.answerIndex,
+      choice: s.question.choices.indexOf(q.choices[q.answerIndex]),
       elapsedMs: 1200,
     });
     s = await get('sessions/' + id);
@@ -74,7 +74,7 @@ try {
   await page.evaluate(() => document.fonts.ready);
   await page.screenshot({ path: new URL('landing-desktop.png', out).pathname, fullPage: true });
   await check('Consent-based enrollment and initial dashboard', async () => {
-    await page.goto('/start');
+    await page.goto('/start?from=e2e');
     await page.getByRole('checkbox').waitFor();
     await page.getByRole('checkbox').check();
     await page.getByRole('button', { name: 'لنبدأ الرحلة' }).click();
@@ -111,7 +111,9 @@ try {
     );
     const answer = {
       questionId: s.question.id,
-      choice: bank.get(s.question.id).answerIndex,
+      choice: s.question.choices.indexOf(
+        bank.get(s.question.id).choices[bank.get(s.question.id).answerIndex],
+      ),
       elapsedMs: 1000,
     };
     const first = await post(`sessions/${pre.id}/answer`, answer);
@@ -131,10 +133,27 @@ try {
     assert.equal(a.id, b.id);
     practiceId = a.id;
   });
+  await check(
+    'Choosing a new skill preserves separate open sessions and stable choices',
+    async () => {
+      const circle = await post('sessions', { kind: 'practice', skill: 'circle' }, 201);
+      const rectangle = await post('sessions', { kind: 'practice', skill: 'rectangle' }, 201);
+      assert.notEqual(circle.id, rectangle.id);
+      assert.equal((await get('sessions/' + circle.id)).question.skillId, 'circle');
+      assert.equal((await get('sessions/' + rectangle.id)).question.skillId, 'rectangle');
+      const resume = await post('sessions', { kind: 'practice', skill: 'circle' }, 201);
+      assert.equal(resume.id, circle.id);
+      assert.deepEqual(
+        (await get('sessions/' + circle.id)).question.choices,
+        (await get('sessions/' + resume.id)).question.choices,
+      );
+    },
+  );
   await check('Wrong answer, authored hint, retry, and progress survive the real UI', async () => {
     const s = await get('sessions/' + practiceId),
       q = bank.get(s.question.id),
-      wrong = (q.answerIndex + 1) % 4;
+      correct = s.question.choices.indexOf(q.choices[q.answerIndex]),
+      wrong = (correct + 1) % 4;
     await page.goto('/session/' + practiceId);
     await page.getByRole('radiogroup').waitFor();
     await page.getByRole('radio').nth(wrong).check();
@@ -149,7 +168,7 @@ try {
       await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth),
       'Mobile training must not overflow horizontally',
     );
-    await page.getByRole('radio').nth(q.answerIndex).check();
+    await page.getByRole('radio').nth(correct).check();
     await page.getByRole('button', { name: 'جرّب مرة أخرى', exact: true }).click();
     await page.getByRole('button', { name: 'السؤال التالي', exact: true }).waitFor();
     await page.getByRole('button', { name: 'السؤال التالي', exact: true }).click();
@@ -199,12 +218,13 @@ try {
         409,
       );
       const report = await get('admin/overview');
-      assert(report.registered >= 2);
-      assert(report.firstSession >= 1);
-      assert(report.learning.paired >= 1);
+      assert(
+        !report.participants.some((p) => participantIds.includes(p.id)),
+        'Test participants are excluded from reporting',
+      );
       const csv = await context.request.get('/api/admin/export');
       assert.equal(csv.status(), 200);
-      assert((await csv.text()).includes(participantIds[0]));
+      assert(!(await csv.text()).includes(participantIds[0]));
     },
   );
   await check('Reviewer UI shows drafts and requires explicit human signoff', async () => {

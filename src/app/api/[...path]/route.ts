@@ -18,7 +18,7 @@ import {
 import { questions, questionMap, contentHash } from '@/lib/content';
 import { CONSENT_VERSION, toCsv } from '@/lib/rules';
 import { readiness } from '@/lib/readiness';
-import { sessionState, startSession, answerQuestion, overview } from '@/lib/study';
+import { sessionState, startSession, answerQuestion, overview, reviewSession } from '@/lib/study';
 import { requestHint } from '@/lib/hints';
 import { adminOverview } from '@/lib/admin';
 export const runtime = 'nodejs';
@@ -84,7 +84,7 @@ async function handle(req: NextRequest, context: { params: Promise<{ path: strin
       );
       const t = token();
       const [p] =
-        await db()`INSERT INTO participants(session_hash,consent_version,source,mode) VALUES(${hash(t)},${CONSENT_VERSION},${data.source},${r.mode}) RETURNING id`;
+        await db()`INSERT INTO participants(session_hash,consent_version,source,mode,is_test) VALUES(${hash(t)},${CONSENT_VERSION},${data.source},${r.mode},${['ux_review', 'ux_review_return', 'e2e', 'mentor_e2e'].includes(data.source)}) RETURNING id`;
       (await cookies()).set('praxis_session', t, cookieOptions(req));
       await db()`INSERT INTO events(participant_id,name) VALUES(${p.id},'registered')`;
       return json({ id: p.id }, 201);
@@ -96,6 +96,13 @@ async function handle(req: NextRequest, context: { params: Promise<{ path: strin
         throw new ApiError(401, 'رمز المشرف غير صحيح.');
       (await cookies()).set('praxis_admin', hash(secret), cookieOptions(req, 60 * 60 * 8));
       return json({ ok: true });
+    }
+    if (method === 'POST' && route === 'admin/cleanup-test') {
+      await requireAdmin();
+      const { sessionId } = z.object({ sessionId: uuid }).parse(await body(req));
+      const removed =
+        await db()`DELETE FROM participants p USING study_sessions s WHERE s.id=${sessionId} AND s.participant_id=p.id AND p.is_test=true AND p.source IN ('ux_review','ux_review_return','e2e','mentor_e2e') RETURNING p.id`;
+      return json({ removed: removed.length });
     }
     if (method === 'POST' && route === 'admin/logout') {
       (await cookies()).delete('praxis_admin');
@@ -167,6 +174,12 @@ async function handle(req: NextRequest, context: { params: Promise<{ path: strin
     }
     const p = await requireParticipant();
     if (method === 'POST' && route === 'logout') {
+      const [account] = await db()`SELECT recovery_hash FROM participants WHERE id=${p.id}`;
+      if (!account.recovery_hash)
+        throw new ApiError(
+          409,
+          'أنشئ رمز دخولك واحفظه من إعدادات الحساب أدناه قبل الخروج حتى تستطيع العودة إلى تقدمك.',
+        );
       (await cookies()).delete('praxis_session');
       return json({ ok: true });
     }
@@ -190,6 +203,7 @@ async function handle(req: NextRequest, context: { params: Promise<{ path: strin
     if (path[0] === 'sessions' && path[1]) {
       const id = uuid.parse(path[1]);
       if (method === 'GET' && path.length === 2) return json(await sessionState(id, p.id));
+      if (method === 'GET' && path[2] === 'review') return json(await reviewSession(id, p.id));
       if (method === 'POST' && path[2] === 'answer') {
         const data = z
           .object({

@@ -8,3 +8,8 @@ test-results/
 quality-results/
 *.tsbuildinfo
 *.log
+
+# OCR runtime copied from pinned npm packages by prebuild
+/public/ocr/*.js
+/public/ocr/*.txt
+/public/ocr/LICENSE

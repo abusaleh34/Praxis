@@ -6,7 +6,8 @@ export function Shell({ children }: { children: React.ReactNode }) {
   const path = usePathname();
   const links = [
     ['/learn', 'home', 'مساحتي'],
-    ['/library', 'book', 'رحلة التعلّم'],
+    ['/mentor', 'spark', 'المدرّب'],
+    ['/library', 'book', 'المهارات'],
     ['/progress', 'chart', 'تقدّمي'],
   ];
   return (
@@ -45,16 +46,22 @@ export function Shell({ children }: { children: React.ReactNode }) {
           </div>
           <div className="crumb">
             مساحة التعلّم <span>/</span>{' '}
-            {path === '/library'
-              ? 'الهندسة'
-              : path === '/progress'
-                ? 'تقدّمك'
-                : path.startsWith('/session')
-                  ? 'جلسة تعلّم'
-                  : 'بداية جديدة'}
+            {path === '/mentor'
+              ? 'المدرّب التفاعلي'
+              : path === '/challenge'
+                ? 'تدريب الوقت'
+                : path === '/report'
+                  ? 'التقرير الأسبوعي'
+                  : path === '/library'
+                    ? 'الهندسة'
+                    : path === '/progress'
+                      ? 'تقدّمك'
+                      : path.startsWith('/session')
+                        ? 'جلسة تعلّم'
+                        : 'بداية جديدة'}
           </div>
           <span className="top-pill">
-            <span /> القدرات · القسم الكمي
+            <span /> القدرات والتحصيلي
           </span>
         </header>
         <main>{children}</main>

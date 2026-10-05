@@ -18,6 +18,9 @@ export function proxy(req: NextRequest) {
       headers: { 'Cache-Control': 'no-store', 'Content-Type': 'text/plain; charset=utf-8' },
     });
   }
+  // Only an expiring, unguessable report token grants access to this read-only snapshot.
+  if (req.method === 'GET' && /^\/shared\/[\w-]{43}$/.test(req.nextUrl.pathname))
+    return NextResponse.next();
   // Railway probes database readiness without browser credentials.
   if (req.method === 'GET' && req.nextUrl.pathname === '/api/health') return NextResponse.next();
   if (

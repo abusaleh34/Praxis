@@ -4,6 +4,7 @@ import { Shell } from '@/components/shell';
 import { Icon } from '@/components/icon';
 import { useOverview } from '@/components/use-overview';
 import { api, post } from '@/components/client';
+import { AccountAccess } from '@/components/account-access';
 export default function Progress() {
   const { data: d, error, busy, begin, router } = useOverview();
   const [actionError, setActionError] = useState(''),
@@ -12,8 +13,12 @@ export default function Progress() {
     [surveyDone, setSurveyDone] = useState(false),
     [checkout, setCheckout] = useState('');
   async function logout() {
-    await post('logout', {});
-    router.push('/start');
+    try {
+      await post('logout', {});
+      router.push('/start');
+    } catch (e) {
+      setActionError((e as Error).message);
+    }
   }
   async function remove() {
     try {
@@ -176,6 +181,11 @@ export default function Progress() {
                           timeZone: 'Asia/Riyadh',
                         })}
                       </small>
+                      {s.kind === 'practice' && (
+                        <a href={'/review/' + s.id} className="text-button">
+                          راجع الأسئلة والخطوات
+                        </a>
+                      )}
                     </div>
                     <strong dir="ltr">
                       {s.score} / {s.total}
@@ -258,6 +268,17 @@ export default function Progress() {
               )}
             </section>
           )}
+          <section className="panel">
+            <h2>المدرّب وخريطة المهارات</h2>
+            <p>
+              شاهد محاولات المدرّب التفاعلي والتدريب المؤقّت، والتوصية التالية، وشارك ملخصًا مع ولي
+              أمرك.
+            </p>
+            <a href="/report" className="button primary">
+              افتح التقرير الأسبوعي
+            </a>
+          </section>
+          <AccountAccess />
           <div className="account-actions">
             <button className="text-button" onClick={logout}>
               <Icon name="logout" size={15} /> تسجيل الخروج

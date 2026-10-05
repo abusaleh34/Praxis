@@ -7,6 +7,10 @@ CREATE TABLE IF NOT EXISTS participants (
  created_at timestamptz NOT NULL DEFAULT now()
 );
 ALTER TABLE participants ADD COLUMN IF NOT EXISTS mode text NOT NULL DEFAULT 'development';
+ALTER TABLE participants ADD COLUMN IF NOT EXISTS recovery_hash text;
+CREATE UNIQUE INDEX IF NOT EXISTS participant_recovery ON participants(recovery_hash) WHERE recovery_hash IS NOT NULL;
+ALTER TABLE participants ADD COLUMN IF NOT EXISTS is_test boolean NOT NULL DEFAULT false;
+UPDATE participants SET is_test=true WHERE source IN ('ux_review','ux_review_return','e2e','mentor_e2e');
 CREATE TABLE IF NOT EXISTS study_sessions (
  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
  participant_id uuid NOT NULL REFERENCES participants(id) ON DELETE CASCADE,
@@ -18,7 +22,10 @@ CREATE TABLE IF NOT EXISTS study_sessions (
  UNIQUE(id,participant_id)
 );
 CREATE UNIQUE INDEX IF NOT EXISTS one_assessment ON study_sessions(participant_id,kind) WHERE kind IN ('pre','post');
-CREATE UNIQUE INDEX IF NOT EXISTS one_open_practice ON study_sessions(participant_id) WHERE kind='practice' AND completed_at IS NULL;
+ALTER TABLE study_sessions ADD COLUMN IF NOT EXISTS skill text NOT NULL DEFAULT 'general';
+ALTER TABLE study_sessions ADD COLUMN IF NOT EXISTS shuffle_choices boolean NOT NULL DEFAULT false;
+DROP INDEX IF EXISTS one_open_practice;
+CREATE UNIQUE INDEX IF NOT EXISTS one_open_skill ON study_sessions(participant_id,skill) WHERE kind='practice' AND completed_at IS NULL;
 CREATE TABLE IF NOT EXISTS attempts (
  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
  session_id uuid NOT NULL,
@@ -81,3 +88,46 @@ CREATE TABLE IF NOT EXISTS rate_limits (
  count integer NOT NULL DEFAULT 1,
  expires_at timestamptz NOT NULL
 );
+CREATE TABLE IF NOT EXISTS mentor_attempts (
+ id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+ participant_id uuid NOT NULL REFERENCES participants(id) ON DELETE CASCADE,
+ activity_id text NOT NULL,
+ skill text NOT NULL,
+ correct boolean NOT NULL,
+ assisted boolean NOT NULL DEFAULT false,
+ elapsed_ms integer NOT NULL CHECK(elapsed_ms BETWEEN 0 AND 3600000),
+ created_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE TABLE IF NOT EXISTS mentor_activities (
+ id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+ participant_id uuid NOT NULL REFERENCES participants(id) ON DELETE CASCADE,
+ lesson text NOT NULL,
+ seed integer NOT NULL,
+ variant integer NOT NULL,
+ mode text NOT NULL DEFAULT 'learn' CHECK(mode IN ('learn','speed','exam')),
+ hint_count integer NOT NULL DEFAULT 0,
+ first_choice integer,
+ last_choice integer,
+ resolved boolean NOT NULL DEFAULT false,
+ created_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE UNIQUE INDEX IF NOT EXISTS mentor_first_attempt ON mentor_attempts(participant_id,activity_id);
+CREATE TABLE IF NOT EXISTS report_shares (
+ token_hash text PRIMARY KEY,
+ participant_id uuid NOT NULL REFERENCES participants(id) ON DELETE CASCADE,
+ snapshot jsonb NOT NULL,
+ created_at timestamptz NOT NULL DEFAULT now(),
+ expires_at timestamptz NOT NULL DEFAULT now()+interval '7 days'
+);
+
+CREATE TABLE IF NOT EXISTS mentor_batches (
+ id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+ participant_id uuid NOT NULL REFERENCES participants(id) ON DELETE CASCADE,
+ mode text NOT NULL CHECK (mode IN ('learn','speed','exam')),
+ created_at timestamptz NOT NULL DEFAULT now(),
+ completed_at timestamptz,
+ deadline timestamptz
+);
+ALTER TABLE mentor_activities ADD COLUMN IF NOT EXISTS batch_id uuid REFERENCES mentor_batches(id) ON DELETE CASCADE;
+ALTER TABLE mentor_activities ADD COLUMN IF NOT EXISTS position integer NOT NULL DEFAULT 0;
+CREATE INDEX IF NOT EXISTS mentor_batch_owner ON mentor_batches(participant_id,created_at DESC);

@@ -43,6 +43,8 @@ export interface Overview {
   postOpensAt: string;
   postEligible: boolean;
   activeSession: string | null;
+  activeSessions: { id: string; kind: Kind; skill: string }[];
+  adaptive: ReturnType<typeof import('./adaptive').adaptiveProfile>;
   recent: { id: string; kind: Kind; score: number; total: number; completedAt: string }[];
   skills: { id: string; name: string; answered: number; correct: number }[];
   offer: { enabled: boolean; description: string; eligible: boolean };

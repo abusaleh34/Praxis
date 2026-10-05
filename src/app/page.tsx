@@ -26,15 +26,16 @@ export default function Home() {
               <em>تعرف ليش.</em>
             </h1>
             <p>
-              مساحة للتدرّب على هندسة القدرات. رسوم توضّح الفكرة، وتلميحات تساعدك تكتشف الحل بنفسك.
+              مدرّب للقدرات يبدأ معك من الفكرة: رسوم تفاعلية، وتلميحات، وتدريب في الكمي واللفظي،
+              وخطوة تالية من محاولاتك.
             </p>
             <div className="hero-actions">
               <Link href="/start" className="button primary">
                 ابدأ رحلتك <Icon name="arrow" />
               </Link>
-              <a href="#how" className="text-button">
-                خذ فكرة عن التجربة <Icon name="chevron" size={18} />
-              </a>
+              <Link href="/mentor" className="text-button">
+                جرّب المدرّب التفاعلي <Icon name="chevron" size={18} />
+              </Link>
             </div>
             <div className="hero-facts">
               <span>
@@ -114,7 +115,7 @@ export default function Home() {
         <section className="quiet-cta">
           <div>
             <h2>ابدأ بخطوة. والباقي نتعلّمه معًا.</h2>
-            <p>تجربة مركّزة على الهندسة، بأسئلة أصلية.</p>
+            <p>رسم يتحرك معك، ومسائل متنوعة، وتقرير يوضح خطوتك القادمة.</p>
           </div>
           <Link href="/start" className="button dark">
             لنبدأ <Icon name="arrow" />

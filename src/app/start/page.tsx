@@ -4,6 +4,10 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Brand, Icon } from '@/components/icon';
 import { api, post } from '@/components/client';
+function destination() {
+  const path = new URLSearchParams(location.search).get('next');
+  return ['/mentor', '/challenge', '/report'].includes(path ?? '') ? path! : '/learn';
+}
 export default function Start() {
   const router = useRouter();
   const [config, setConfig] = useState<{
@@ -17,13 +21,28 @@ export default function Start() {
     [busy, setBusy] = useState(false),
     [error, setError] = useState(''),
     [joined, setJoined] = useState(false);
+  const [restoring, setRestoring] = useState(false),
+    [recovery, setRecovery] = useState('');
+  async function restore(e: React.FormEvent) {
+    e.preventDefault();
+    setBusy(true);
+    setError('');
+    try {
+      await post('access', { action: 'restore', code: recovery });
+      router.push(destination());
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  }
   useEffect(() => {
     api('config')
       .then((c) => {
         setConfig(c);
         if (c.authenticated) {
           if (c.mode === 'waitlist') setJoined(true);
-          else router.replace('/learn');
+          else router.replace(destination());
         }
       })
       .catch((e) => setError(e.message));
@@ -40,7 +59,7 @@ export default function Start() {
         source: /^[a-zA-Z0-9_-]{1,50}$/.test(source) ? source : 'direct',
       });
       if (config?.mode === 'waitlist') setJoined(true);
-      else router.push('/learn');
+      else router.push(destination());
     } catch (e) {
       setError((e as Error).message);
     } finally {
@@ -103,13 +122,52 @@ export default function Start() {
           ) : (
             <>
               <h2>{config?.mode === 'waitlist' ? 'كن من أوائل المهتمين' : 'أهلًا بك في Praxis'}</h2>
-              <p>دخول بسيط، دون اسم أو رقم هاتف. نحفظ تقدمك في هذا المتصفح.</p>
+              <p>دخول بسيط، دون اسم أو رقم هاتف. احفظ رمز دخولك لتعود إلى تقدمك من أي جهاز.</p>
+              <div className="mode-tabs">
+                <button
+                  className={!restoring ? 'active' : ''}
+                  onClick={() => {
+                    setRestoring(false);
+                    setError('');
+                  }}
+                >
+                  طالب جديد
+                </button>
+                <button
+                  className={restoring ? 'active' : ''}
+                  onClick={() => {
+                    setRestoring(true);
+                    setError('');
+                  }}
+                >
+                  لدي رمز دخول
+                </button>
+              </div>
               {error && (
                 <div role="alert" className="error">
                   {error}
                 </div>
               )}
-              {!config ? (
+              {restoring ? (
+                <form onSubmit={restore}>
+                  <label className="field">
+                    <span>رمز الدخول المحفوظ</span>
+                    <input
+                      dir="ltr"
+                      autoComplete="off"
+                      value={recovery}
+                      onChange={(e) => setRecovery(e.target.value)}
+                      placeholder="PX-…"
+                      required
+                      maxLength={100}
+                    />
+                  </label>
+                  <button className="button primary wide" disabled={busy}>
+                    {busy ? 'نستعيد تقدمك…' : 'العودة إلى حسابي'}
+                  </button>
+                  <p className="small-label">استخدم رمز حسابك، وليس كلمة مرور المعاينة.</p>
+                </form>
+              ) : !config ? (
                 <div className="loading" role="status">
                   نجهّز البداية…
                 </div>
