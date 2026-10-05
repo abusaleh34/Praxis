@@ -38,6 +38,7 @@ export interface Overview {
   completedQuestions: number;
   accuracy: number;
   practiceSessions: number;
+  completedSessions: number;
   pre: { score: number; total: number } | null;
   post: { score: number; total: number } | null;
   postOpensAt: string;
@@ -45,7 +46,15 @@ export interface Overview {
   activeSession: string | null;
   activeSessions: { id: string; kind: Kind; skill: string }[];
   adaptive: ReturnType<typeof import('./adaptive').adaptiveProfile>;
-  recent: { id: string; kind: Kind; score: number; total: number; completedAt: string }[];
+  recent: {
+    id: string;
+    kind: Kind;
+    label: string;
+    href: string;
+    score: number;
+    total: number;
+    completedAt: string;
+  }[];
   skills: { id: string; name: string; answered: number; correct: number }[];
   offer: { enabled: boolean; description: string; eligible: boolean };
 }

@@ -4,9 +4,10 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Brand, Icon } from '@/components/icon';
 import { api, post } from '@/components/client';
+import { safeDestination } from '@/lib/mentor-navigation';
 function destination() {
   const path = new URLSearchParams(location.search).get('next');
-  return ['/mentor', '/challenge', '/report'].includes(path ?? '') ? path! : '/learn';
+  return safeDestination(path);
 }
 export default function Start() {
   const router = useRouter();

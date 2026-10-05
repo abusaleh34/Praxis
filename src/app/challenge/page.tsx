@@ -3,19 +3,29 @@ import { useEffect, useState } from 'react';
 import { Shell } from '@/components/shell';
 import { Exercise } from '@/components/mentor/exercise';
 import { lessons } from '@/lib/mentor-catalog';
+import { rememberMentor, safeDestination } from '@/lib/mentor-navigation';
 export default function Challenge() {
   const [mode, setMode] = useState<'speed' | 'exam'>('speed'),
-    [lesson, setLesson] = useState('triangle');
+    [lesson, setLesson] = useState('triangle'),
+    [ready, setReady] = useState(false);
   useEffect(() => {
+    if (!location.search) {
+      const saved = sessionStorage.getItem('praxis-context:/challenge');
+      if (saved) history.replaceState(null, '', safeDestination(saved));
+    }
     const q = new URLSearchParams(location.search);
     if (q.get('mode') === 'exam') setMode('exam');
     const s = q.get('skill');
     if (s && lessons.some((l) => l.id === s)) setLesson(s);
+    setReady(true);
   }, []);
-  function reset() {
+  function reset(nextMode = mode, nextLesson = lesson) {
     const u = new URL(location.href);
     u.searchParams.delete('batch');
+    u.searchParams.set('mode', nextMode);
+    u.searchParams.set('skill', nextLesson);
     history.replaceState(null, '', u);
+    rememberMentor();
   }
   return (
     <Shell>
@@ -31,7 +41,7 @@ export default function Challenge() {
           <button
             aria-pressed={mode === 'speed'}
             onClick={() => {
-              reset();
+              reset('speed');
               setMode('speed');
             }}
           >
@@ -40,7 +50,7 @@ export default function Challenge() {
           <button
             aria-pressed={mode === 'exam'}
             onClick={() => {
-              reset();
+              reset('exam');
               setMode('exam');
             }}
           >
@@ -53,7 +63,7 @@ export default function Challenge() {
             <select
               value={lesson}
               onChange={(e) => {
-                reset();
+                reset(mode, e.target.value);
                 setLesson(e.target.value);
               }}
             >
@@ -71,7 +81,7 @@ export default function Challenge() {
             : 'ستة أسئلة متنوعة في ست دقائق. إذا تعثّرت، انتقل للسؤال التالي بدل استنزاف الوقت.'}
         </p>
       </section>
-      <Exercise key={mode + lesson} mode={mode} lesson={lesson} />
+      {ready && <Exercise key={mode + lesson} mode={mode} lesson={lesson} />}
     </Shell>
   );
 }

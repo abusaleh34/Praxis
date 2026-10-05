@@ -2848,3 +2848,148 @@ textarea {
 .app-main main > .panel + .panel {
   margin-top: 20px;
 }
+
+/* Compact learning journey with persistent, keyboard-accessible section controls. */
+.learning-tabs {
+  display: flex;
+  position: sticky;
+  top: 8px;
+  z-index: 5;
+  gap: 6px;
+  padding: 6px;
+  background: #edf4f0f5;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  margin: 14px 0;
+}
+.learning-tabs button {
+  flex: 1;
+  border: 0;
+  border-radius: 10px;
+  padding: 12px;
+  background: transparent;
+  color: var(--ink);
+  font-size: 16px;
+}
+.learning-tabs [aria-pressed='true'] {
+  background: var(--green);
+  color: white;
+}
+.resume-card {
+  display: block;
+  padding: 18px;
+  margin: 14px 0;
+  border: 1px solid #9ecbb8;
+  border-radius: 12px;
+  background: #eaf8f1;
+  color: #145744;
+  font-weight: 700;
+}
+.guide-question,
+.submission-review {
+  background: #edf4ff;
+  padding: 18px;
+  margin: 16px 0;
+  border-radius: 12px;
+}
+.guide-question button {
+  white-space: normal;
+  text-align: right;
+}
+.exam-navigation {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 14px 0;
+}
+.exam-navigation button {
+  min-width: 48px;
+  min-height: 44px;
+  background: #eff5f1;
+  color: var(--ink);
+  border: 1px solid #bdcfc5;
+  border-radius: 9px;
+}
+.exam-navigation [aria-current] {
+  border: 2px solid var(--green);
+  background: #d4eee0;
+}
+.proof-player svg,
+.rectangle-proof {
+  width: 100%;
+  display: block;
+}
+.proof-player label {
+  display: block;
+  margin: 0 18px;
+  font-size: 15px;
+}
+.proof-player input {
+  display: block;
+  width: 100%;
+  accent-color: #69d5be;
+  min-height: 40px;
+}
+.proof-player p {
+  padding: 0 18px 14px;
+  color: #d7eae4;
+}
+.moving-angle {
+  transition: transform 1.8s ease-in-out;
+}
+.perimeter-trace {
+  transition: stroke-dashoffset 2s ease-in-out;
+}
+.proof-reveal {
+  transition: opacity 1.5s;
+}
+@media (prefers-reduced-motion: reduce) {
+  .moving-angle,
+  .perimeter-trace,
+  .proof-reveal {
+    transition: none;
+  }
+}
+@media (max-width: 600px) {
+  .mentor-heading {
+    margin-bottom: 8px;
+  }
+  .mentor-heading h1 {
+    font-size: 24px;
+  }
+  .mentor-heading p {
+    margin: 6px 0;
+  }
+  .lesson-picker {
+    padding: 14px;
+    margin: 12px 0;
+  }
+  .lesson-picker .category-tabs {
+    gap: 6px;
+    margin-bottom: 8px;
+  }
+  .lesson-picker .category-tabs button {
+    padding: 8px 13px;
+  }
+  .lesson-picker .muted {
+    display: none;
+  }
+  .photo-question {
+    padding: 14px;
+    margin: 12px 0;
+  }
+  .mentor-lab {
+    padding: 14px;
+    margin: 12px 0;
+  }
+  .mentor-lab .panel-heading {
+    margin-bottom: 12px;
+  }
+  .learning-tabs {
+    top: 4px;
+  }
+  .exercise {
+    margin: 12px 0;
+    padding: 16px;
+  }
+}

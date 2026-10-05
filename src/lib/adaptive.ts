@@ -47,8 +47,14 @@ export function adaptiveProfile(evidence: Evidence[], now = Date.now()) {
         : wrong || assisted
           ? 'نحتاج مراجعة'
           : 'قيد التدريب';
+    const needsReview = independent < 3 && (wrong > 0 || assisted > 0);
     const priority =
-      wrong * 3 + assisted * 2 + (due ? 3 : 0) + (rows.length ? 0 : 2) - independent * 2;
+      (needsReview ? 30 : 0) +
+      wrong * 3 +
+      assisted * 2 +
+      (due ? 10 : 0) +
+      (rows.length ? 0 : 2) -
+      independent * 2;
     return {
       id,
       name,
@@ -72,7 +78,7 @@ export function adaptiveProfile(evidence: Evidence[], now = Date.now()) {
   const reason = prerequisite
     ? `نراجع ${next.name} لأنها أساس لمهارة ${ranked[0].name} وظهرت أخطاء فيها.`
     : next.wrong
-      ? `ظهرت ${next.wrong} محاولات تحتاج مراجعة في ${next.name}. نبدأ بالفكرة ثم سؤال جديد.`
+      ? `ظهرت ${next.wrong} محاولات تحتاج مراجعة في ${next.name}. نبدأ بسؤال موجّه لتحديد موضع التعثر، ثم نختبر الفهم بمسألة جديدة.`
       : next.assisted
         ? `نجرّب ${next.name} دون مساعدة بعد استخدام التلميحات.`
         : next.due

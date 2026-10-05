@@ -4,6 +4,9 @@ import Link from 'next/link';
 import { api, post } from '../client';
 import { Geometry } from '../geometry';
 import type { Diagram } from '@/lib/types';
+import { lessonById } from '@/lib/mentor-catalog';
+import { rememberMentor, sessionHref } from '@/lib/mentor-navigation';
+type Guide = { question: string; choices: string[]; index: number; total: number };
 type Question = {
   id: string;
   lesson: string;
@@ -16,6 +19,9 @@ type Question = {
   hint?: string;
   hints: number;
   chosen: number | null;
+  firstChosen: number | null;
+  flagged: boolean;
+  guide: Guide | null;
   firstCorrect: boolean;
   assisted: boolean;
   resolved: boolean;
@@ -35,13 +41,16 @@ type Batch = {
   question: Question | null;
   score?: number;
   results?: Question[];
+  navigation?: { id: string; position: number; answered: boolean; flagged: boolean }[];
 };
 export function Exercise({
   lesson,
   mode = 'learn',
+  reviewOnly = false,
 }: {
   lesson: string;
   mode?: 'learn' | 'speed' | 'exam';
+  reviewOnly?: boolean;
 }) {
   const [batch, setBatch] = useState<Batch | null>(null),
     [choice, setChoice] = useState<number | null>(null),
@@ -53,18 +62,25 @@ export function Exercise({
     [seconds, setSeconds] = useState(0),
     [remaining, setRemaining] = useState(360),
     [sessions, setSessions] = useState<any[]>([]);
+  const [guide, setGuide] = useState<Guide | null>(null),
+    [submitReview, setSubmitReview] = useState(false),
+    [loginHref, setLoginHref] = useState('/start');
   const [model, setModel] = useState(false),
     [message, setMessage] = useState(''),
     [chat, setChat] = useState<Array<{ role: 'user' | 'assistant'; content: string }>>([]);
   const elapsed = useRef(0),
     expired = useRef(false);
   const q = batch?.question;
-  async function load(id: string) {
+  async function load(id: string, position?: number) {
     setBusy(true);
     setError('');
     try {
-      const state = await api<Batch>('mentor?id=' + id);
+      const state = await api<Batch>(
+        'mentor?id=' + id + (position === undefined ? '' : '&position=' + position),
+      );
       setBatch(state);
+      setSubmitReview(false);
+      setGuide(state.question?.guide ?? null);
       setFeedback(
         state.mode !== 'exam' && state.question?.firstCorrect === false
           ? { correct: false, resolved: false }
@@ -101,7 +117,11 @@ export function Exercise({
       .catch(failure);
     const id = new URLSearchParams(location.search).get('batch');
     if (id && /^[a-f0-9-]{36}$/.test(id)) void load(id);
+    setLoginHref('/start?next=' + encodeURIComponent(location.pathname + location.search));
   }, []);
+  useEffect(() => {
+    setLoginHref('/start?next=' + encodeURIComponent(location.pathname + location.search));
+  }, [reviewOnly, lesson]);
   useEffect(() => {
     setChat([]);
     setMessage('');
@@ -145,6 +165,7 @@ export function Exercise({
       url.searchParams.set('mode', mode);
       url.searchParams.set('skill', lesson);
       history.replaceState(null, '', url);
+      rememberMentor();
       await load(d.id);
     } catch (e) {
       failure(e);
@@ -165,7 +186,7 @@ export function Exercise({
         reveal,
       });
       if (batch.mode === 'exam') {
-        await load(batch.id);
+        await load(batch.id, batch.index + 1 < batch.total ? batch.index + 1 : undefined);
       } else {
         setFeedback(result);
         if (result.hint && !result.resolved) setHint(result.hint);
@@ -205,7 +226,79 @@ export function Exercise({
     setBusy(true);
     try {
       const d = await post('mentor', { action: 'hint', id: q.id });
-      setHint([d.hint, d.step].filter(Boolean).join(' '));
+      setHint(d.hint);
+      setGuide(d.guide);
+    } catch (e) {
+      failure(e);
+    } finally {
+      setBusy(false);
+    }
+  }
+  async function respondToGuide(choice: number) {
+    if (!q || !guide) return;
+    setBusy(true);
+    try {
+      const d = await post('mentor', { action: 'guide', id: q.id, index: guide.index, choice });
+      setGuide(d.guide);
+      setHint(d.hint);
+    } catch (e) {
+      failure(e);
+    } finally {
+      setBusy(false);
+    }
+  }
+  async function navigate(position: number) {
+    if (!batch || !q) {
+      if (batch) await load(batch.id, position);
+      return;
+    }
+    setBusy(true);
+    try {
+      if (choice !== null && choice !== q.chosen)
+        await post('mentor', {
+          action: 'answer',
+          id: q.id,
+          choice,
+          elapsedMs: Math.min(3600000, Math.floor(elapsed.current)),
+        });
+      await load(batch.id, position);
+    } catch (e) {
+      failure(e);
+    } finally {
+      setBusy(false);
+    }
+  }
+  async function flag() {
+    if (!q || !batch) return;
+    setBusy(true);
+    try {
+      await post('mentor', { action: 'flag', id: q.id, flagged: !q.flagged });
+      setBatch({
+        ...batch,
+        question: { ...q, flagged: !q.flagged },
+        navigation: batch.navigation?.map((n) =>
+          n.id === q.id ? { ...n, flagged: !q.flagged } : n,
+        ),
+      });
+    } catch (e) {
+      failure(e);
+    } finally {
+      setBusy(false);
+    }
+  }
+  async function reviewSubmission() {
+    if (!batch) return;
+    setBusy(true);
+    try {
+      if (q && choice !== null && choice !== q.chosen)
+        await post('mentor', {
+          action: 'answer',
+          id: q.id,
+          choice,
+          elapsedMs: Math.min(3600000, Math.floor(elapsed.current)),
+        });
+      await load(batch.id, q ? batch.index : undefined);
+      setSubmitReview(true);
     } catch (e) {
       failure(e);
     } finally {
@@ -214,7 +307,10 @@ export function Exercise({
   }
   async function finish(confirm = true) {
     if (!batch) return;
-    if (confirm && !window.confirm('تسليم التدريب الآن؟ الأسئلة المتبقية ستظهر دون إجابة.')) return;
+    if (confirm && !submitReview) {
+      await reviewSubmission();
+      return;
+    }
     setBusy(true);
     try {
       await post('mentor', { action: 'finish', id: batch.id });
@@ -232,6 +328,7 @@ export function Exercise({
         <div>
           <span className="badge">
             {mode === 'exam' ? 'محاكاة تدريبية' : mode === 'speed' ? 'سرعة مع فهم' : 'ثبّت الفكرة'}
+            {mode !== 'exam' && ` · ${lessonById.get(lesson)?.name}`}
           </span>
           <h2>
             {mode === 'exam'
@@ -241,7 +338,7 @@ export function Exercise({
                 : 'ثلاث مسائل للفكرة نفسها'}
           </h2>
         </div>
-        {!batch && (
+        {!batch && !reviewOnly && (
           <button disabled={busy} className="button primary" onClick={start}>
             {busy ? 'نجهز الأسئلة…' : 'ابدأ التدريب'}
           </button>
@@ -256,7 +353,12 @@ export function Exercise({
         <p>
           <Link
             className="button primary"
-            href={'/start?next=' + (mode === 'learn' ? '/mentor' : '/challenge')}
+            href={loginHref}
+            onClick={(e) => {
+              e.preventDefault();
+              location.href =
+                '/start?next=' + encodeURIComponent(location.pathname + location.search);
+            }}
           >
             ادخل لحفظ محاولاتك
           </Link>
@@ -264,6 +366,18 @@ export function Exercise({
       )}
       {!batch && (
         <>
+          {sessions
+            .filter((s) => !s.completed_at && !reviewOnly)
+            .slice(0, 1)
+            .map((s) => (
+              <a className="resume-card" href={sessionHref(s)} key={s.id}>
+                أكمل{' '}
+                {s.mode === 'exam'
+                  ? 'التدريب المؤقّت'
+                  : 'تدريب ' + (lessonById.get(s.lesson)?.name ?? '')}{' '}
+                — السؤال {Math.min(s.done + 1, s.total)} من {s.total} ←
+              </a>
+            ))}
           <p>
             الأسئلة تتغير في الأرقام وطريقة الطلب. تُحفظ صحة محاولتك الأولى ووقت السؤال واستخدامك
             للتلميحات.
@@ -275,27 +389,29 @@ export function Exercise({
             </p>
           )}
           {sessions.length > 0 && (
-            <details>
+            <details open={reviewOnly}>
               <summary>جلساتك الأخيرة</summary>
               <div className="session-links">
-                {sessions.slice(0, 6).map((s) => (
-                  <button
-                    key={s.id}
-                    className="text-button"
-                    disabled={busy}
-                    onClick={() => load(s.id)}
-                  >
-                    {s.mode === 'exam'
-                      ? 'تدريب مؤقّت'
-                      : s.mode === 'speed'
-                        ? 'تدريب سرعة'
-                        : 'تدريب المهارة'}{' '}
-                    · {new Date(s.created_at).toLocaleDateString('ar-SA')} ·{' '}
-                    {s.completed_at ? 'النتيجة' : 'استئناف'}
-                  </button>
-                ))}
+                {sessions
+                  .filter((s) => !reviewOnly || s.completed_at)
+                  .slice(0, 12)
+                  .map((s) => (
+                    <a key={s.id} className="text-button" href={sessionHref(s)}>
+                      {s.mode === 'exam'
+                        ? 'تدريب مؤقّت'
+                        : s.mode === 'speed'
+                          ? 'تدريب سرعة'
+                          : 'تدريب المهارة'}{' '}
+                      · {s.mode !== 'exam' ? lessonById.get(s.lesson)?.name : 'كمي ولفظي'} ·{' '}
+                      {new Date(s.created_at).toLocaleDateString('ar-SA')} ·{' '}
+                      {s.completed_at ? 'النتيجة' : 'استئناف'}
+                    </a>
+                  ))}
               </div>
             </details>
+          )}
+          {reviewOnly && !sessions.some((s) => s.completed_at) && (
+            <p>لا توجد جلسات مكتملة بعد. انتقل إلى «جرّب» وابدأ تدريبًا.</p>
           )}
         </>
       )}
@@ -311,6 +427,56 @@ export function Exercise({
                 : `${seconds} ثانية`}
             </span>
           </div>
+          {batch.mode === 'exam' && (
+            <>
+              <nav className="exam-navigation" aria-label="أسئلة التدريب المؤقّت">
+                {batch.navigation?.map((n) => (
+                  <button
+                    key={n.id}
+                    disabled={busy}
+                    aria-current={batch.index === n.position ? 'step' : undefined}
+                    aria-label={`السؤال ${n.position + 1}${n.answered ? '، تمت الإجابة' : '، دون إجابة'}${n.flagged ? '، للمراجعة' : ''}`}
+                    onClick={() => navigate(n.position)}
+                  >
+                    {n.position + 1}
+                    {n.answered ? ' ✓' : ''}
+                    {n.flagged ? ' ⚑' : ''}
+                  </button>
+                ))}
+              </nav>
+              <p className="muted">
+                يمكنك الرجوع لأي سؤال وتعديل إجابتك حتى التسليم. ✓ إجابة محفوظة · ⚑ للمراجعة
+              </p>
+              {submitReview && (
+                <div className="submission-review" role="region" aria-label="مراجعة قبل التسليم">
+                  <h3>قبل تسليم التدريب</h3>
+                  <p>
+                    أجبت عن {batch.navigation?.filter((n) => n.answered).length} من {batch.total}.
+                  </p>
+                  <p>
+                    دون إجابة:{' '}
+                    {batch.navigation
+                      ?.filter((n) => !n.answered)
+                      .map((n) => n.position + 1)
+                      .join('، ') || 'لا يوجد'}
+                  </p>
+                  <p>
+                    للمراجعة:{' '}
+                    {batch.navigation
+                      ?.filter((n) => n.flagged)
+                      .map((n) => n.position + 1)
+                      .join('، ') || 'لا يوجد'}
+                  </p>
+                  <button className="button primary" disabled={busy} onClick={() => finish()}>
+                    تأكيد التسليم
+                  </button>
+                  <button className="button ghost" onClick={() => setSubmitReview(false)}>
+                    أكمل المراجعة
+                  </button>
+                </div>
+              )}
+            </>
+          )}
           {q ? (
             <>
               <h3>{q.name}</h3>
@@ -342,6 +508,26 @@ export function Exercise({
                   {hint && (
                     <div className="socratic-box" aria-live="polite">
                       {hint}
+                    </div>
+                  )}
+                  {guide && !feedback?.resolved && (
+                    <div className="guide-question" aria-live="polite">
+                      <small>
+                        خطوة {guide.index + 1} من {guide.total}
+                      </small>
+                      <h3>{guide.question}</h3>
+                      <div className="action-row">
+                        {guide.choices.map((c, i) => (
+                          <button
+                            key={c}
+                            className="button ghost"
+                            disabled={busy}
+                            onClick={() => respondToGuide(i)}
+                          >
+                            {c}
+                          </button>
+                        ))}
+                      </div>
                     </div>
                   )}
                   {feedback && !feedback.resolved && (
@@ -388,9 +574,23 @@ export function Exercise({
                     >
                       لا أعرف
                     </button>
+                    {batch.mode === 'exam' && (
+                      <button
+                        className="button ghost"
+                        aria-pressed={q.flagged}
+                        disabled={busy}
+                        onClick={flag}
+                      >
+                        {q.flagged ? 'إزالة علامة المراجعة' : 'علّم للمراجعة'}
+                      </button>
+                    )}
                     {batch.mode !== 'exam' && (
                       <>
-                        <button className="button ghost" disabled={busy} onClick={askHint}>
+                        <button
+                          className="button ghost"
+                          disabled={busy || Boolean(guide)}
+                          onClick={askHint}
+                        >
                           ساعدني بسؤال
                         </button>
                         {feedback && (
@@ -449,13 +649,20 @@ export function Exercise({
           <h2>
             نتيجتك: {batch.score} من {batch.total}
           </h2>
-          <p>صحة المحاولة الأولى. راجع السؤال والوقت وطريقة الاختصار، ثم جرّب سؤالًا جديدًا.</p>
+          <p>
+            {batch.mode === 'exam'
+              ? 'الدرجة للإجابة النهائية المحفوظة عند التسليم.'
+              : 'الدرجة للمحاولة الأولى؛ تصحيح الإجابة لاحقًا يظهر أدناه.'}{' '}
+            راجع السؤال والوقت وطريقة الاختصار.
+          </p>
           {batch.results?.map((r) => (
             <article key={r.id} className="result-card">
               <div className="exercise-meta">
                 <strong>
                   {r.firstCorrect
-                    ? '✓ صحيح من أول محاولة'
+                    ? batch.mode === 'exam'
+                      ? '✓ إجابة نهائية صحيحة'
+                      : '✓ صحيح من أول محاولة'
                     : r.chosen === null
                       ? 'دون إجابة'
                       : 'نراجع الفكرة'}
@@ -466,9 +673,23 @@ export function Exercise({
               </div>
               <h3>{r.prompt}</h3>
               <p>
-                اختيارك:{' '}
-                {r.chosen === null || r.chosen < 0 ? 'لا أعرف / لم أجب' : r.choices[r.chosen]} ·
-                الصحيح: {r.choices[r.answer!]} {r.unit}
+                {batch.mode === 'exam' ? 'إجابتك النهائية: ' : 'محاولتك الأولى: '}
+                {batch.mode === 'exam'
+                  ? r.chosen === null || r.chosen < 0
+                    ? 'لم أجب'
+                    : r.choices[r.chosen]
+                  : r.firstChosen === null || r.firstChosen < 0
+                    ? 'لا أعرف / لم أجب'
+                    : r.choices[r.firstChosen]}{' '}
+                {r.unit}
+                {batch.mode !== 'exam' && r.chosen !== r.firstChosen && (
+                  <>
+                    {' '}
+                    · بعد التصحيح:{' '}
+                    {r.chosen === null || r.chosen < 0 ? 'لم أجب' : r.choices[r.chosen]} {r.unit}
+                  </>
+                )}{' '}
+                · الصحيح: {r.choices[r.answer!]} {r.unit}
               </p>
               <ol>
                 {r.steps?.map((s) => (

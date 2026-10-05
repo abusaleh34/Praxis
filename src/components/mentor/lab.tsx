@@ -3,12 +3,16 @@ import { useEffect, useState } from 'react';
 import { Geometry } from '../geometry';
 import { lessonById } from '@/lib/mentor-catalog';
 import { labDefaults, labModel, normalizeNumber } from '@/lib/lab';
+import { TriangleProof, RectangleProof } from './visual-proof';
+import { rememberMentor } from '@/lib/mentor-navigation';
 export function Lab({
   lesson,
   imported,
+  onPractice,
 }: {
   lesson: string;
-  imported?: { a: number; b: number; stamp: number };
+  imported?: { a: number; b: number; stamp: number; target?: 'area' | 'perimeter'; step?: number };
+  onPractice: () => void;
 }) {
   useEffect(
     () => () => {
@@ -20,6 +24,7 @@ export function Lab({
   const defaults = labDefaults[lesson] ?? [50, 60];
   const [a, setA] = useState(defaults[0]),
     [b, setB] = useState(defaults[1]),
+    [target, setTarget] = useState<'area' | 'perimeter'>('area'),
     [step, setStep] = useState(0),
     [playing, setPlaying] = useState(false),
     [answer, setAnswer] = useState(''),
@@ -37,9 +42,17 @@ export function Lab({
   }, [lesson]);
   useEffect(() => {
     if (imported) {
-      setA(imported.a);
-      setB(imported.b);
-      setStep(0);
+      const ranges = labModel(lesson, imported.a, imported.b).ranges;
+      const safeA = Math.max(ranges[0][0], Math.min(ranges[0][1], imported.a || defaults[0]));
+      const safeRanges = labModel(lesson, safeA, imported.b).ranges;
+      setA(safeA);
+      setB(
+        safeRanges[1]
+          ? Math.max(safeRanges[1][0], Math.min(safeRanges[1][1], imported.b || defaults[1]))
+          : 0,
+      );
+      setTarget(imported.target ?? 'area');
+      setStep(imported.step ?? 0);
       setStage(0);
       setFeedback('');
     }
@@ -55,13 +68,37 @@ export function Lab({
           }
           return s + 1;
         }),
-      2200,
+      3400,
     );
     return () => clearInterval(t);
   }, [playing]);
-  const m = labModel(lesson, a, b),
+  useEffect(() => {
+    const u = new URL(location.href);
+    u.searchParams.set('skill', lesson);
+    u.searchParams.set('a', String(a));
+    u.searchParams.set('b', String(b));
+    u.searchParams.set('target', target);
+    u.searchParams.set('step', String(step));
+    history.replaceState(null, '', u);
+    rememberMentor();
+  }, [a, b, target, step, lesson]);
+  const m = labModel(lesson, a, b, target),
     verbal = ['analogy', 'reading'].includes(lesson);
-  const spoken = meta.steps[step] + (step === 2 ? ' ' + m.formula : '');
+  const steps =
+    lesson === 'rectangle'
+      ? target === 'perimeter'
+        ? [
+            'المطلوب المحيط: طول الحدود الأربعة.',
+            'تتبّع ضلعًا طويلًا ثم قصيرًا، ثم الضلعين المقابلين المساويين لهما.',
+            'اجمع الطول والعرض واضرب المجموع في اثنين.',
+          ]
+        : [
+            'المطلوب المساحة: تغطية داخل المستطيل.',
+            'كل صف يحتوي عددًا من مربعات الوحدة يساوي الطول.',
+            'اضرب عدد المربعات في الصف في عدد الصفوف.',
+          ]
+      : meta.steps;
+  const spoken = steps[step] + (step === 2 ? ' ' + m.formula : '');
   function change(index: number, v: number) {
     if (index === 0) {
       setA(v);
@@ -101,39 +138,15 @@ export function Lab({
       </div>
       <div className="lab-grid">
         <div className="lab-visual">
-          {m.diagram && (
+          {lesson === 'triangle' && <TriangleProof a={a} b={b} step={step} />}
+          {lesson === 'rectangle' && <RectangleProof a={a} b={b} step={step} target={target} />}
+          {m.diagram && !['triangle', 'rectangle'].includes(lesson) && (
             <Geometry
               diagram={m.diagram}
-              highlight={step === 0 ? 'given' : step === 1 ? 'relation' : 'target'}
+              highlight={
+                step === 0 ? 'known' : step === 1 ? (lesson === 'circle' ? 'arc' : 'all') : 'target'
+              }
             />
-          )}
-          {lesson === 'triangle' && step > 0 && (
-            <svg
-              className="angle-proof"
-              viewBox="0 0 360 95"
-              role="img"
-              aria-label="تمثيل مجموع الزوايا الثلاث على نصف دورة يساوي 180 درجة"
-            >
-              <path d="M30 60H330" stroke="#b7edda" strokeWidth="2" />
-              {[a, b, 180 - a - b].map((v, i) => {
-                const start = i === 0 ? 0 : i === 1 ? a : a + b;
-                const x1 = 180 - 65 * Math.cos((start * Math.PI) / 180),
-                  y1 = 60 - 65 * Math.sin((start * Math.PI) / 180),
-                  x2 = 180 - 65 * Math.cos(((start + v) * Math.PI) / 180),
-                  y2 = 60 - 65 * Math.sin(((start + v) * Math.PI) / 180);
-                return (
-                  <path
-                    key={i}
-                    d={`M180 60L${x1} ${y1}A65 65 0 0 1 ${x2} ${y2}Z`}
-                    fill={['#69d5be', '#f1c36c', '#b9a2ee'][i]}
-                    opacity=".8"
-                  />
-                );
-              })}
-              <text x="180" y="88" textAnchor="middle" fill="white" fontSize="15">
-                {a}° + {b}° + {180 - a - b}° = 180°
-              </text>
-            </svg>
           )}
           {!m.diagram && !verbal && (
             <svg className="relation-graph" viewBox="0 0 400 260" role="img" aria-label={m.formula}>
@@ -211,6 +224,32 @@ export function Lab({
           )}
         </div>
         <div className="lab-controls">
+          {lesson === 'rectangle' && (
+            <div className="category-tabs" aria-label="المطلوب في المستطيل">
+              <button
+                aria-pressed={target === 'area'}
+                onClick={() => {
+                  setTarget('area');
+                  setStep(0);
+                  setStage(0);
+                  setFeedback('');
+                }}
+              >
+                المساحة
+              </button>
+              <button
+                aria-pressed={target === 'perimeter'}
+                onClick={() => {
+                  setTarget('perimeter');
+                  setStep(0);
+                  setStage(0);
+                  setFeedback('');
+                }}
+              >
+                المحيط
+              </button>
+            </div>
+          )}
           {!verbal &&
             m.labels.map((label, i) => (
               <label key={label}>
@@ -229,7 +268,7 @@ export function Lab({
             ))}
           <p className="muted">حرّك القيم ولاحظ ما يتغير وما يبقى ثابتًا.</p>
           <ol className="lesson-steps">
-            {meta.steps.map((s, i) => (
+            {steps.map((s, i) => (
               <li key={s} className={step === i ? 'active' : ''}>
                 <button
                   onClick={() => {
@@ -256,20 +295,26 @@ export function Lab({
             <button
               className="button ghost small"
               disabled={step === 0}
-              onClick={() => setStep(step - 1)}
+              onClick={() => {
+                setStep(step - 1);
+                setPlaying(false);
+              }}
             >
               السابق
             </button>
             <button
               className="button primary small"
               disabled={step === 2}
-              onClick={() => setStep(step + 1)}
+              onClick={() => {
+                setStep(step + 1);
+                setPlaying(false);
+              }}
             >
               التالي
             </button>
           </div>
           <p className="lab-formula" dir="auto" aria-live="polite">
-            {step === 2 ? m.formula : meta.steps[step]}
+            {step === 2 ? m.formula : steps[step]}
           </p>
           <button
             className="text-button"
@@ -314,9 +359,16 @@ export function Lab({
       )}
       <div className="fast-strategy">
         <h3>طريقة أسرع للاختبار</h3>
-        <p>{meta.fast}</p>
+        <p>
+          {lesson === 'rectangle' && target === 'perimeter'
+            ? 'اجمع الطول والعرض مرة واحدة ثم ضاعفهما. لا تضرب الطول في العرض؛ ذلك يحسب المساحة.'
+            : meta.fast}
+        </p>
         <small>متى تصلح؟ {meta.condition}</small>
       </div>
+      <button className="button primary wide" onClick={onPractice}>
+        جرّب ثلاث مسائل بنفسك ←
+      </button>
     </section>
   );
 }

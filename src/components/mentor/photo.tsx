@@ -3,11 +3,13 @@ import { useEffect, useRef, useState } from 'react';
 import { api, post } from '../client';
 import { labModel, normalizeNumber } from '@/lib/lab';
 import { lessonById } from '@/lib/mentor-catalog';
+import { questionIntent } from '@/lib/question-intent';
 const templates = [
   ['triangle', 'زاوية مثلث ثالثة من زاويتين'],
   ['isosceles', 'زاوية قاعدة من زاوية الرأس'],
   ['circle', 'زاوية محيطية من المركزية'],
   ['rectangle', 'مساحة مستطيل من الطول والعرض'],
+  ['rectangle-perimeter', 'محيط مستطيل من الطول والعرض'],
   ['exterior', 'خارجية مثلث من الداخليتين البعيدتين'],
   ['right', 'وتر مثلث قائم من الضلعين'],
   ['polygon', 'داخلية مضلع منتظم من عدد أضلاعه'],
@@ -20,7 +22,7 @@ const templates = [
 export function PhotoQuestion({
   onApply,
 }: {
-  onApply: (lesson: string, a: number, b: number) => void;
+  onApply: (lesson: string, a: number, b: number, target: 'area' | 'perimeter') => void;
 }) {
   const [file, setFile] = useState<File | null>(null),
     [preview, setPreview] = useState(''),
@@ -35,10 +37,12 @@ export function PhotoQuestion({
     [b, setB] = useState(''),
     [confirmed, setConfirmed] = useState(false),
     [prepared, setPrepared] = useState(false);
+  const [clarification, setClarification] = useState('');
   const worker = useRef<import('tesseract.js').Worker | null>(null),
     mounted = useRef(true);
   useEffect(() => {
     mounted.current = true;
+    setText(sessionStorage.getItem('praxis-question-draft') ?? '');
     api<{ vision: boolean }>('mentor')
       .then((d) => setVision(d.vision))
       .catch(() => {});
@@ -53,7 +57,11 @@ export function PhotoQuestion({
     setPreview(u);
     return () => URL.revokeObjectURL(u);
   }, [file]);
-  const m = lesson ? labModel(lesson, Number(a) || 1, Number(b) || 1) : null;
+  const lessonId = lesson === 'rectangle-perimeter' ? 'rectangle' : lesson;
+  const target = lesson === 'rectangle-perimeter' ? 'perimeter' : 'area';
+  const m = lesson
+    ? labModel(lessonId, normalizeNumber(a) || 1, normalizeNumber(b) || 1, target)
+    : null;
   async function read() {
     if (!file) return;
     setBusy(true);
@@ -106,31 +114,20 @@ export function PhotoQuestion({
   function prepare() {
     setPrepared(true);
     setConfirmed(false);
-    let id = '';
-    if (/دائر|مركزي/.test(text)) id = 'circle';
-    else if (/مستطيل/.test(text)) id = 'rectangle';
-    else if (/مثلث/.test(text))
-      id = /قائم/.test(text)
-        ? 'right'
-        : /الساقين/.test(text)
-          ? 'isosceles'
-          : /خارج/.test(text)
-            ? 'exterior'
-            : 'triangle';
-    else if (/نسبة|%|٪/.test(text)) id = 'fractions';
-    else if (/سرعة|كم\/س/.test(text)) id = 'speed';
-    setLesson(id);
-    const nums = text.match(/[\d٠-٩۰-۹]+(?:[.٫][\d٠-٩۰-۹]+)?/g) ?? [];
-    setA(nums[0] ? String(normalizeNumber(nums[0])) : '');
-    setB(nums[1] ? String(normalizeNumber(nums[1])) : '');
+    const suggestion = questionIntent(text);
+    setLesson(suggestion.template);
+    setClarification(suggestion.message);
+    setA(suggestion.values[0] !== undefined ? String(suggestion.values[0]) : '');
+    setB(suggestion.values[1] !== undefined ? String(suggestion.values[1]) : '');
     setError('');
   }
   function apply() {
     if (!lesson || !m) return;
     const av = normalizeNumber(a),
       bv = normalizeNumber(b) || 0;
-    const current = labModel(lesson, av, bv);
+    const current = labModel(lessonId, av, bv, target);
     const valid =
+      a.trim() !== '' &&
       Number.isFinite(av) &&
       (lesson !== 'polygon' || Number.isInteger(av)) &&
       av >= current.ranges[0][0] &&
@@ -144,7 +141,7 @@ export function PhotoQuestion({
       setError('القيم خارج نطاق المختبر. راجع الحدود المكتوبة بجانب كل حقل.');
       return;
     }
-    onApply(lesson, av, bv);
+    onApply(lessonId, av, bv, target);
     setError('');
   }
   return (
@@ -209,7 +206,10 @@ export function PhotoQuestion({
           rows={4}
           onChange={(e) => {
             setText(e.target.value);
+            sessionStorage.setItem('praxis-question-draft', e.target.value);
             setConfirmed(false);
+            setPrepared(false);
+            setLesson('');
           }}
           placeholder="اكتب السؤال أو اقرأه من الصورة"
         />
@@ -219,6 +219,7 @@ export function PhotoQuestion({
       </button>
       {prepared && (
         <div className="photo-confirm">
+          <p role="status">{clarification}</p>
           <p>
             اختر المطلوب الصحيح ثم حدّد المعطيات. اقتراح الأرقام لا يثبت علاقتها بالرسم؛ تأكد منها
             قبل الحساب.
@@ -266,7 +267,7 @@ export function PhotoQuestion({
           </button>
           {lesson && (
             <p className="muted">
-              بعد الشرح، ستجد ثلاث مسائل في {lessonById.get(lesson)?.name} للتدريب.
+              بعد الشرح، ستجد ثلاث مسائل في {lessonById.get(lessonId)?.name} للتدريب.
             </p>
           )}
         </div>

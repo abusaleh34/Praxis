@@ -6,6 +6,7 @@ import { postEligible, postOpensAt } from './rules';
 import type { Kind, Overview, StudyState } from './types';
 import { choiceOrder } from './choice-order';
 import { adaptiveProfile } from './adaptive';
+import { lessons } from './mentor-catalog';
 
 export async function sessionState(id: string, participantId: string): Promise<StudyState> {
   const [s] =
@@ -139,23 +140,26 @@ export async function answerQuestion(
 }
 export async function overview(participantId: string): Promise<Overview> {
   const sql = db();
-  const [[p], sessions, skillRows, evidence, mentorRows] = await Promise.all([
+  const [[p], sessions, evidence, mentorRows, mentorSessions] = await Promise.all([
     sql`SELECT id,created_at FROM participants WHERE id=${participantId}`,
     sql`SELECT * FROM study_sessions WHERE participant_id=${participantId} ORDER BY started_at DESC`,
-    sql`SELECT a.question_id,a.correct FROM attempts a JOIN study_sessions s ON s.id=a.session_id WHERE a.participant_id=${participantId} AND s.kind='practice' AND a.resolved_at IS NOT NULL`,
     sql`SELECT a.question_id,a.correct,a.created_at,s.kind,EXISTS(SELECT 1 FROM hint_events h WHERE h.session_id=a.session_id AND h.question_id=a.question_id AND h.created_at<=a.created_at) AS assisted FROM attempts a JOIN study_sessions s ON s.id=a.session_id WHERE a.participant_id=${participantId} AND (s.kind='practice' OR s.completed_at IS NOT NULL)`,
     sql`SELECT a.*,m.lesson,m.variant,m.seed FROM mentor_attempts a JOIN mentor_activities m ON m.id::text=a.activity_id JOIN mentor_batches b ON b.id=m.batch_id WHERE a.participant_id=${participantId} AND (m.mode<>'exam' OR b.completed_at IS NOT NULL)`,
+    sql`SELECT b.id,b.mode,b.completed_at,min(m.lesson) AS lesson,count(m.id)::int AS total,count(t.activity_id) FILTER(WHERE t.correct)::int AS score FROM mentor_batches b JOIN mentor_activities m ON m.batch_id=b.id LEFT JOIN mentor_attempts t ON t.activity_id=m.id::text AND t.participant_id=b.participant_id WHERE b.participant_id=${participantId} AND b.completed_at IS NOT NULL GROUP BY b.id`,
   ]);
   const completed = sessions.filter((s) => s.completed_at),
     pre = completed.find((s) => s.kind === 'pre'),
     post = completed.find((s) => s.kind === 'post');
-  const skills = [
-    ...new Map(
-      questions.map((q) => [q.skillId, { id: q.skillId, name: q.skill, answered: 0, correct: 0 }]),
-    ).values(),
+  const skills = lessons.map((l) => ({ id: l.id, name: l.name, answered: 0, correct: 0 }));
+  const allRows = [
+    ...evidence.map((e) => ({
+      correct: Boolean(e.correct),
+      skill: questionMap.get(e.question_id)?.skillId,
+    })),
+    ...mentorRows,
   ];
-  for (const row of skillRows) {
-    const id = questionMap.get(row.question_id)?.skillId;
+  for (const row of allRows) {
+    const id = row.skill;
     const s = skills.find((s) => s.id === id);
     if (s) {
       s.answered++;
@@ -165,11 +169,12 @@ export async function overview(participantId: string): Promise<Overview> {
   const practiced = completed.filter((s) => s.kind === 'practice');
   return {
     participant: { id: p.id, joinedAt: new Date(p.created_at).toISOString() },
-    completedQuestions: skillRows.length,
-    accuracy: skillRows.length
-      ? Math.round((skillRows.filter((r) => r.correct).length / skillRows.length) * 100)
+    completedQuestions: allRows.length,
+    accuracy: allRows.length
+      ? Math.round((allRows.filter((r) => r.correct).length / allRows.length) * 100)
       : 0,
-    practiceSessions: practiced.length,
+    practiceSessions: practiced.length + mentorSessions.length,
+    completedSessions: completed.length + mentorSessions.length,
     pre: pre ? { score: pre.score, total: pre.question_ids.length } : null,
     post: post ? { score: post.score, total: post.question_ids.length } : null,
     postOpensAt: postOpensAt(p.created_at).toISOString(),
@@ -196,13 +201,36 @@ export async function overview(participantId: string): Promise<Overview> {
         date: new Date(e.created_at).toISOString(),
       })),
     ]),
-    recent: completed.slice(0, 6).map((s) => ({
-      id: s.id,
-      kind: s.kind,
-      score: s.score,
-      total: s.question_ids.length,
-      completedAt: new Date(s.completed_at).toISOString(),
-    })),
+    recent: [
+      ...completed.map((s) => ({
+        id: s.id,
+        kind: s.kind,
+        label:
+          s.kind === 'pre'
+            ? 'الاختبار القبلي'
+            : s.kind === 'post'
+              ? 'الاختبار البعدي'
+              : 'جلسة تدريب',
+        href: '/review/' + s.id,
+        score: s.score,
+        total: s.question_ids.length,
+        completedAt: new Date(s.completed_at).toISOString(),
+      })),
+      ...mentorSessions.map((s) => ({
+        id: s.id,
+        kind: 'practice' as const,
+        label:
+          s.mode === 'exam'
+            ? 'تدريب مؤقّت'
+            : (lessons.find((l) => l.id === s.lesson)?.name ?? 'تدريب المهارة'),
+        href: `${s.mode === 'learn' ? '/mentor' : '/challenge'}?skill=${s.lesson}&mode=${s.mode}&batch=${s.id}&view=practice`,
+        score: s.score,
+        total: s.total,
+        completedAt: new Date(s.completed_at).toISOString(),
+      })),
+    ]
+      .sort((a, b) => Date.parse(b.completedAt) - Date.parse(a.completedAt))
+      .slice(0, 6),
     skills,
     offer: {
       enabled: Boolean(process.env.PRAXIS_CHECKOUT_URL && process.env.PRAXIS_OFFER_DESCRIPTION),

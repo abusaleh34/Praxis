@@ -130,4 +130,6 @@ CREATE TABLE IF NOT EXISTS mentor_batches (
 );
 ALTER TABLE mentor_activities ADD COLUMN IF NOT EXISTS batch_id uuid REFERENCES mentor_batches(id) ON DELETE CASCADE;
 ALTER TABLE mentor_activities ADD COLUMN IF NOT EXISTS position integer NOT NULL DEFAULT 0;
+ALTER TABLE mentor_activities ADD COLUMN IF NOT EXISTS flagged boolean NOT NULL DEFAULT false;
+ALTER TABLE mentor_activities ADD COLUMN IF NOT EXISTS guide_step integer NOT NULL DEFAULT 0;
 CREATE INDEX IF NOT EXISTS mentor_batch_owner ON mentor_batches(participant_id,created_at DESC);

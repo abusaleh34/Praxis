@@ -1,7 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { ApiError, requireParticipant, sameOrigin, limit } from '@/lib/auth';
-import { startMentor, mentorState, answerMentor, hintMentor, finishMentor } from '@/lib/mentor';
+import {
+  startMentor,
+  mentorState,
+  answerMentor,
+  hintMentor,
+  finishMentor,
+  answerGuide,
+  flagMentor,
+} from '@/lib/mentor';
 import { readiness } from '@/lib/readiness';
 import { db } from '@/lib/db';
 export const runtime = 'nodejs';
@@ -13,9 +21,18 @@ async function handle(req: NextRequest) {
     const p = await requireParticipant();
     if (req.method === 'GET') {
       const id = req.nextUrl.searchParams.get('id');
-      if (id) return send(await mentorState(p.id, z.string().uuid().parse(id)));
+      if (id) {
+        const index = req.nextUrl.searchParams.get('position');
+        return send(
+          await mentorState(
+            p.id,
+            z.string().uuid().parse(id),
+            index === null ? undefined : z.coerce.number().int().min(0).max(5).parse(index),
+          ),
+        );
+      }
       const sessions =
-        await db()`SELECT id,mode,created_at,completed_at FROM mentor_batches WHERE participant_id=${p.id} ORDER BY created_at DESC LIMIT 12`;
+        await db()`SELECT b.id,b.mode,b.created_at,b.completed_at,b.deadline,min(a.lesson) AS lesson,count(a.id)::int AS total,count(a.id) FILTER(WHERE a.resolved)::int AS done FROM mentor_batches b JOIN mentor_activities a ON a.batch_id=b.id WHERE b.participant_id=${p.id} GROUP BY b.id ORDER BY b.created_at DESC LIMIT 12`;
       return send({
         sessions,
         vision: Boolean(process.env.PRAXIS_AI_API_KEY && process.env.PRAXIS_AI_MODEL),
@@ -43,6 +60,13 @@ async function handle(req: NextRequest) {
           reveal: z.boolean().default(false),
         }),
         z.object({ action: z.literal('hint'), id: z.string().uuid() }),
+        z.object({
+          action: z.literal('guide'),
+          id: z.string().uuid(),
+          index: z.number().int().min(0).max(5),
+          choice: z.number().int().min(0).max(3),
+        }),
+        z.object({ action: z.literal('flag'), id: z.string().uuid(), flagged: z.boolean() }),
         z.object({ action: z.literal('finish'), id: z.string().uuid() }),
       ])
       .parse(JSON.parse(text));
@@ -50,6 +74,8 @@ async function handle(req: NextRequest) {
     if (d.action === 'answer')
       return send(await answerMentor(p.id, d.id, d.choice, d.elapsedMs, d.reveal));
     if (d.action === 'hint') return send(await hintMentor(p.id, d.id));
+    if (d.action === 'guide') return send(await answerGuide(p.id, d.id, d.index, d.choice));
+    if (d.action === 'flag') return send(await flagMentor(p.id, d.id, d.flagged));
     return send(await finishMentor(p.id, d.id));
   } catch (e) {
     return send(

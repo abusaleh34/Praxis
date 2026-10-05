@@ -14,7 +14,7 @@ export const labDefaults: Record<string, [number, number]> = {
   physics: [5, 4],
   chemistry: [18, 2],
 };
-export function labModel(id: string, a: number, b: number) {
+export function labModel(id: string, a: number, b: number, target: 'area' | 'perimeter' = 'area') {
   let diagram: Diagram | undefined,
     result = 0,
     formula = '',
@@ -99,6 +99,16 @@ export function labModel(id: string, a: number, b: number) {
         answer: a,
         hint: 'كل مربع وحدة واحدة؛ عدد المربعات في الصف يساوي الطول.',
       };
+      if (target === 'perimeter') {
+        result = 2 * (a + b);
+        unit = 'سم';
+        formula = `2 × (${a} + ${b}) = ${result} سم`;
+        checkpoint = {
+          question: 'كم مجموع طول ضلع طويل وضلع قصير؟',
+          answer: a + b,
+          hint: 'اجمع الطول والعرض أولًا. لكل منهما ضلع مقابل مساوٍ له.',
+        };
+      }
       break;
     case 'right':
       labels = ['الضلع القائم الأول', 'الضلع القائم الثاني'];

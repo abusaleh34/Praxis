@@ -14,6 +14,7 @@ export async function reportFor(pid: string) {
   return {
     generatedAt: new Date().toISOString(),
     period: 'آخر 7 أيام',
+    scoringNote: 'المحاولة الأولى في التعلّم، والإجابة النهائية عند تسليم التدريب المؤقّت.',
     attempts: week.length,
     accuracy: accuracy(week),
     previousAccuracy: accuracy(previous),

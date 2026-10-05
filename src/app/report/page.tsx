@@ -83,7 +83,7 @@ export default function Report() {
             </div>
             <div className="stat-card">
               <strong>{report.accuracy === null ? '—' : report.accuracy + '%'}</strong>
-              <span>صحيح من المحاولة الأولى</span>
+              <span>إجابات صحيحة عند التقييم</span>
             </div>
             <div className="stat-card">
               <strong>{report.minutes}</strong>
@@ -132,6 +132,7 @@ export default function Report() {
             <Link className="button primary" href={'/mentor?skill=' + report.recommendation.skill}>
               ابدأ {report.recommendation.name}
             </Link>
+            <p className="muted">{report.scoringNote}</p>
             <p className="muted">{report.note}</p>
           </section>
           <section className="panel">

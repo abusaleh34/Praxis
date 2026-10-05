@@ -43,7 +43,7 @@ try {
     async () => {
       await page.goto('/mentor');
       await page.getByRole('heading', { name: 'شاهد الفكرة. جرّبها. افهمها.' }).waitFor();
-      await page.getByRole('link', { name: 'ادخل لحفظ محاولاتك' }).waitFor();
+      await page.getByRole('slider', { name: 'الزاوية الأولى', exact: true }).waitFor();
       const range = page.getByRole('slider', { name: 'الزاوية الأولى', exact: true });
       await range.fill('80');
       await page.getByRole('button', { name: 'التالي', exact: true }).click();
@@ -263,6 +263,7 @@ try {
       }
     }
     await owner.goto('/mentor?skill=analogy');
+    await owner.getByRole('button', { name: 'جرّب', exact: true }).click();
     await owner.getByRole('button', { name: 'ابدأ التدريب', exact: true }).click();
     await owner.locator('.mentor-choices').waitFor();
     assert((await owner.locator('.exercise').innerText()).includes('علاقة'));

@@ -63,6 +63,10 @@ export default function Progress() {
         <div className="loading">نجمع تقدمك…</div>
       ) : (
         <>
+          <p className="muted">
+            إجمالي نشاطك: تُحسب المحاولة الأولى في التعلّم، والإجابة النهائية في التدريب المؤقّت.
+            التقرير الأسبوعي يعرض آخر ٧ أيام.
+          </p>
           <div className="stats-grid">
             <div className="stat-card">
               <span className="icon-box">
@@ -70,7 +74,7 @@ export default function Progress() {
               </span>
               <div>
                 <strong>{d.completedQuestions}</strong>
-                <p>محاولة تدريبية مكتملة</p>
+                <p>محاولة مسجّلة</p>
               </div>
             </div>
             <div className="stat-card">
@@ -79,7 +83,7 @@ export default function Progress() {
               </span>
               <div>
                 <strong>{d.completedQuestions ? `${d.accuracy}%` : '—'}</strong>
-                <p>صحيح من المحاولة الأولى</p>
+                <p>إجابات صحيحة عند التقييم</p>
               </div>
             </div>
             <div className="stat-card">
@@ -87,7 +91,7 @@ export default function Progress() {
                 <Icon name="check" />
               </span>
               <div>
-                <strong>{d.practiceSessions}</strong>
+                <strong>{d.completedSessions}</strong>
                 <p>جلسات أنجزتها</p>
               </div>
             </div>
@@ -169,11 +173,7 @@ export default function Progress() {
                 d.recent.map((s) => (
                   <div className="history-row" key={s.id}>
                     <div>
-                      {s.kind === 'practice'
-                        ? 'جلسة تدريب'
-                        : s.kind === 'pre'
-                          ? 'الاختبار القبلي'
-                          : 'الاختبار البعدي'}
+                      {s.label}
                       <small>
                         {new Date(s.completedAt).toLocaleDateString('ar-SA-u-ca-gregory', {
                           day: 'numeric',
@@ -182,7 +182,7 @@ export default function Progress() {
                         })}
                       </small>
                       {s.kind === 'practice' && (
-                        <a href={'/review/' + s.id} className="text-button">
+                        <a href={s.href} className="text-button">
                           راجع الأسئلة والخطوات
                         </a>
                       )}

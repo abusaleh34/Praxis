@@ -196,7 +196,9 @@ try {
     assert.equal(done.score, 4);
     const d = await get('overview');
     assert.equal(d.practiceSessions, 1);
-    assert.equal(d.accuracy, 80);
+    assert.equal(d.completedSessions, 2);
+    assert.equal(d.completedQuestions, 20);
+    assert.equal(d.accuracy, 95); // 15 pre-test + 4 first-try practice answers out of 20.
   });
   await check('Post-test stays locked for fourteen days and opens at eligibility', async () => {
     await post('sessions', { kind: 'post' }, 409);

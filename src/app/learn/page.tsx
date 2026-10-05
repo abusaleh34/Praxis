@@ -25,7 +25,7 @@ export default function Learn() {
             <div>
               <span className="hello">أهلًا بعودتك 👋</span>
               <h1>خطوة جديدة، وفكرة أوضح.</h1>
-              <p>رحلتك في الهندسة تبدأ بمحاولة.</p>
+              <p>رحلتك في التعلّم تبدأ بمحاولة.</p>
             </div>
             <span className="date-tag">مساحتك، على إيقاعك.</span>
           </div>
@@ -94,7 +94,7 @@ export default function Learn() {
               </span>
               <div>
                 <strong>{d.completedQuestions}</strong>
-                <p>محاولة تدريبية مكتملة</p>
+                <p>محاولة مسجّلة</p>
               </div>
             </div>
             <div className="stat-card">
@@ -103,7 +103,7 @@ export default function Learn() {
               </span>
               <div>
                 <strong>{d.completedQuestions ? `${d.accuracy}%` : '—'}</strong>
-                <p>صحيح من المحاولة الأولى</p>
+                <p>إجابات صحيحة عند التقييم</p>
               </div>
             </div>
             <div className="stat-card">
@@ -111,7 +111,7 @@ export default function Learn() {
                 <Icon name="check" />
               </span>
               <div>
-                <strong>{d.practiceSessions}</strong>
+                <strong>{d.completedSessions}</strong>
                 <p>جلسات أتممتها</p>
               </div>
             </div>
