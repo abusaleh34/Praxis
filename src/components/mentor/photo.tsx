@@ -162,7 +162,18 @@ export function PhotoQuestion({
           accept="image/png,image/jpeg,image/webp"
           onChange={(e) => {
             const f = e.target.files?.[0];
+            setPreview('');
+            setText('');
+            setProgress('');
+            setConfirmed(false);
+            setPrepared(false);
+            setRemote(false);
+            setLesson('');
+            setA('');
+            setB('');
             if (f && f.size > 4 * 1024 * 1024) {
+              setFile(null);
+              e.currentTarget.value = '';
               setError('الحد الأقصى 4 ميغابايت.');
               return;
             }
