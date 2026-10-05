@@ -1,19 +1,13 @@
 'use client';
 import { useEffect, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Geometry } from '../geometry';
 import { lessonById } from '@/lib/mentor-catalog';
-import { labDefaults, labModel, normalizeNumber } from '@/lib/lab';
+import { labDefaults, labModel, normalizeNumber, validLabValues, labInputHelp } from '@/lib/lab';
 import { TriangleProof, RectangleProof } from './visual-proof';
+import { problemGuidance } from '@/lib/problem-guidance';
 import { rememberMentor } from '@/lib/mentor-navigation';
-export function Lab({
-  lesson,
-  imported,
-  onPractice,
-}: {
-  lesson: string;
-  imported?: { a: number; b: number; stamp: number; target?: 'area' | 'perimeter'; step?: number };
-  onPractice: () => void;
-}) {
+export function Lab({ lesson, onPractice }: { lesson: string; onPractice: () => void }) {
   useEffect(
     () => () => {
       if ('speechSynthesis' in window) speechSynthesis.cancel();
@@ -22,66 +16,47 @@ export function Lab({
   );
   const meta = lessonById.get(lesson)!;
   const defaults = labDefaults[lesson] ?? [50, 60];
-  const [a, setA] = useState(defaults[0]),
-    [b, setB] = useState(defaults[1]),
-    [target, setTarget] = useState<'area' | 'perimeter'>('area'),
-    [step, setStep] = useState(0),
-    [playing, setPlaying] = useState(false),
+  const params = useSearchParams();
+  const inputA = Number(params.get('a')),
+    inputB = Number(params.get('b'));
+  const valid = params.has('a') && validLabValues(lesson, inputA, inputB);
+  const a = valid ? inputA : defaults[0],
+    b = valid ? inputB : defaults[1];
+  const target = params.get('target') === 'perimeter' ? 'perimeter' : 'area';
+  const step = Math.min(2, Math.max(0, Math.floor(Number(params.get('step')) || 0)));
+  const [playing, setPlaying] = useState(false),
     [answer, setAnswer] = useState(''),
     [stage, setStage] = useState(0),
     [feedback, setFeedback] = useState(''),
     [pair, setPair] = useState(0);
+  function update(values: Record<string, string | number>) {
+    const u = new URL(location.href);
+    Object.entries({ skill: lesson, a, b, target, step, ...values }).forEach(([k, v]) =>
+      u.searchParams.set(k, String(v)),
+    );
+    history.replaceState(null, '', u);
+    rememberMentor();
+  }
+  function setStep(next: number) {
+    update({ step: next });
+  }
+  function setTarget(next: 'area' | 'perimeter') {
+    update({ target: next, step: 0 });
+  }
   useEffect(() => {
-    setA((labDefaults[lesson] ?? [50, 60])[0]);
-    setB((labDefaults[lesson] ?? [50, 60])[1]);
-    setStep(0);
-    setPlaying(false);
     setStage(0);
     setFeedback('');
     setAnswer('');
-  }, [lesson]);
-  useEffect(() => {
-    if (imported) {
-      const ranges = labModel(lesson, imported.a, imported.b).ranges;
-      const safeA = Math.max(ranges[0][0], Math.min(ranges[0][1], imported.a || defaults[0]));
-      const safeRanges = labModel(lesson, safeA, imported.b).ranges;
-      setA(safeA);
-      setB(
-        safeRanges[1]
-          ? Math.max(safeRanges[1][0], Math.min(safeRanges[1][1], imported.b || defaults[1]))
-          : 0,
-      );
-      setTarget(imported.target ?? 'area');
-      setStep(imported.step ?? 0);
-      setStage(0);
-      setFeedback('');
-    }
-  }, [imported]);
+  }, [a, b, target]);
   useEffect(() => {
     if (!playing) return;
-    const t = setInterval(
-      () =>
-        setStep((s) => {
-          if (s >= 2) {
-            setPlaying(false);
-            return 2;
-          }
-          return s + 1;
-        }),
-      3400,
-    );
-    return () => clearInterval(t);
-  }, [playing]);
-  useEffect(() => {
-    const u = new URL(location.href);
-    u.searchParams.set('skill', lesson);
-    u.searchParams.set('a', String(a));
-    u.searchParams.set('b', String(b));
-    u.searchParams.set('target', target);
-    u.searchParams.set('step', String(step));
-    history.replaceState(null, '', u);
-    rememberMentor();
-  }, [a, b, target, step, lesson]);
+    if (step >= 2) {
+      setPlaying(false);
+      return;
+    }
+    const t = setTimeout(() => setStep(step + 1), 3400);
+    return () => clearTimeout(t);
+  }, [playing, step, a, b, target]);
   const m = labModel(lesson, a, b, target),
     verbal = ['analogy', 'reading'].includes(lesson);
   const steps =
@@ -97,13 +72,34 @@ export function Lab({
             'كل صف يحتوي عددًا من مربعات الوحدة يساوي الطول.',
             'اضرب عدد المربعات في الصف في عدد الصفوف.',
           ]
-      : meta.steps;
+      : lesson === 'chemistry'
+        ? [
+            'المطلوب كتلة العينة بوحدة غرام.',
+            'الكتلة المولية هي كتلة مول واحد؛ نضربها في عدد المولات.',
+            'غ/مول × مول = غ. تحقق من كتلة العينة ووحدتها.',
+          ]
+        : ['physics', 'speed'].includes(lesson)
+          ? [
+              'المطلوب المسافة المقطوعة بسرعة ثابتة.',
+              'وحّد وحدتي السرعة والزمن، ثم اضرب السرعة في الزمن.',
+              'تحقق من المسافة ووحدتها على المحور الرأسي.',
+            ]
+          : meta.steps;
+  const guidance = problemGuidance(
+    lesson,
+    lesson === 'chemistry' ? 1 : lesson === 'rectangle' && target === 'perimeter' ? 1 : 0,
+  );
+  const graphTime = Math.max(10, b),
+    graphDistance = Math.max(lesson === 'physics' ? 150 : 1200, a * b);
+  const graphX = 55 + (b / graphTime) * 285,
+    graphY = 210 - ((a * b) / graphDistance) * 140;
   const spoken = steps[step] + (step === 2 ? ' ' + m.formula : '');
   function change(index: number, v: number) {
-    if (index === 0) {
-      setA(v);
-      if (['triangle', 'exterior'].includes(lesson)) setB((old) => Math.min(old, 170 - v));
-    } else setB(v);
+    const nextA = index === 0 ? v : a;
+    const nextB =
+      index === 1 ? v : ['triangle', 'exterior'].includes(lesson) ? Math.min(b, 179 - v) : b;
+    if (!validLabValues(lesson, nextA, nextB)) return;
+    update({ a: nextA, b: nextB });
     setStage(0);
     setFeedback('');
     setAnswer('');
@@ -136,6 +132,11 @@ export function Lab({
           <p>{meta.idea}</p>
         </div>
       </div>
+      {params.has('a') && !valid && !verbal && (
+        <p role="alert" className="notice">
+          القيم في الرابط غير صالحة: {labInputHelp(lesson)}. نعرض مثالًا افتراضيًا.
+        </p>
+      )}
       <div className="lab-grid">
         <div className="lab-visual">
           {lesson === 'triangle' && <TriangleProof a={a} b={b} step={step} />}
@@ -152,17 +153,26 @@ export function Lab({
             <svg className="relation-graph" viewBox="0 0 400 260" role="img" aria-label={m.formula}>
               {['speed', 'physics'].includes(lesson) ? (
                 <>
-                  <path d="M55 25V210H365" fill="none" stroke="#a7bbc8" strokeWidth="2" />
-                  <path
-                    d={`M55 210L${55 + b * 28} ${210 - Math.min(165, a * b * (lesson === 'physics' ? 1 : 0.1))}`}
-                    stroke="#69d5be"
-                    strokeWidth="4"
-                  />
-                  <text x="205" y="245" fill="white" textAnchor="middle">
-                    الزمن: {b} — المسافة: {a * b}
+                  <text x="64" y="202" fill="white">
+                    0
                   </text>
-                  <text x="200" y="27" fill="#f1c36c" textAnchor="middle">
-                    الميل يتغير مع السرعة
+                  <text x="200" y="45" fill="#a7bbc8" textAnchor="middle">
+                    المحاور تتدرّج لتناسب القيم
+                  </text>
+                  <path d="M55 55V210H365" fill="none" stroke="#a7bbc8" strokeWidth="2" />
+                  <text x="340" y="228" fill="#a7bbc8" textAnchor="middle" fontSize="12">
+                    {graphTime}
+                  </text>
+                  <text x="50" y="75" fill="#a7bbc8" textAnchor="end" fontSize="12">
+                    {graphDistance}
+                  </text>
+                  <circle cx={graphX} cy={graphY} r="4" fill="#f1c36c" />
+                  <path d={`M55 210L${graphX} ${graphY}`} stroke="#69d5be" strokeWidth="4" />
+                  <text x="205" y="245" fill="white" textAnchor="middle">
+                    الزمن: {b} {lesson === 'physics' ? 'ث' : 'ساعة'} — المسافة: {a * b} {m.unit}
+                  </text>
+                  <text x="200" y="20" fill="#f1c36c" textAnchor="middle">
+                    المسافة ({m.unit}) ↑ · الزمن ({lesson === 'physics' ? 'ث' : 'ساعة'}) →
                   </text>
                 </>
               ) : (
@@ -258,9 +268,9 @@ export function Lab({
                 <input
                   aria-label={label}
                   type="range"
-                  min={m.ranges[i][0]}
-                  max={m.ranges[i][1]}
-                  step="1"
+                  min={Math.min(m.ranges[i][0], i === 0 ? a : b)}
+                  max={Math.max(m.ranges[i][1], i === 0 ? a : b)}
+                  step={lesson === 'polygon' ? 1 : 'any'}
                   value={i === 0 ? a : b}
                   onChange={(e) => change(i, +e.target.value)}
                 />
@@ -359,12 +369,8 @@ export function Lab({
       )}
       <div className="fast-strategy">
         <h3>طريقة أسرع للاختبار</h3>
-        <p>
-          {lesson === 'rectangle' && target === 'perimeter'
-            ? 'اجمع الطول والعرض مرة واحدة ثم ضاعفهما. لا تضرب الطول في العرض؛ ذلك يحسب المساحة.'
-            : meta.fast}
-        </p>
-        <small>متى تصلح؟ {meta.condition}</small>
+        <p>{verbal || lesson === 'fractions' ? meta.fast : guidance.fast}</p>
+        <small>متى تصلح؟ {guidance.condition}</small>
       </div>
       <button className="button primary wide" onClick={onPractice}>
         جرّب ثلاث مسائل بنفسك ←

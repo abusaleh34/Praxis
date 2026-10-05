@@ -18,7 +18,7 @@ export function safeDestination(path: string | null) {
   }
   for (const key of ['a', 'b', 'step']) {
     const value = url.searchParams.get(key);
-    if (value && /^\d+(\.\d+)?$/.test(value) && Number(value) <= 10000) q.set(key, value);
+    if (value && /^\d+(\.\d+)?$/.test(value) && Number(value) <= 1_000_000) q.set(key, value);
   }
   const batch = url.searchParams.get('batch');
   if (batch && /^[a-f0-9-]{36}$/.test(batch)) q.set('batch', batch);

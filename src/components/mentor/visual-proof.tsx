@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useId, useState } from 'react';
 
 const colors = ['#69d5be', '#f1c36c', '#b9a2ee'];
 const rad = (n: number) => (n * Math.PI) / 180;
@@ -103,6 +103,8 @@ export function RectangleProof({
   step: number;
   target: 'area' | 'perimeter';
 }) {
+  const gridId = useId();
+  const gridUnit = Math.max(1, 10 ** Math.ceil(Math.log10(Math.max(a, b) / 40)));
   const scale = Math.min(320 / a, 190 / b),
     w = a * scale,
     h = b * scale,
@@ -116,26 +118,34 @@ export function RectangleProof({
       aria-label={
         target === 'perimeter'
           ? 'نتتبع أضلاع المستطيل الأربعة لجمع المحيط'
-          : 'صفوف مربعات الوحدة التي تغطي مساحة المستطيل'
+          : `شبكة تغطي المساحة؛ ضلع المربع الكامل ${gridUnit} سم`
       }
     >
       <rect x={x} y={y} width={w} height={h} stroke="#a7bbc8" fill="#69d5be15" />
       {target === 'area' ? (
         <g opacity={step > 0 ? 1 : 0.15} className="proof-reveal">
-          {Array.from({ length: Math.ceil(a) }, (_, i) =>
-            Array.from({ length: Math.ceil(b) }, (_, j) => (
+          <defs>
+            <pattern
+              id={gridId}
+              x={x}
+              y={y}
+              width={scale * gridUnit}
+              height={scale * gridUnit}
+              patternUnits="userSpaceOnUse"
+            >
               <rect
-                key={i + ':' + j}
-                x={x + i * scale}
-                y={y + j * scale}
-                width={Math.min(1, a - i) * scale}
-                height={Math.min(1, b - j) * scale}
-                fill={j % 2 ? '#69d5be55' : '#f1c36c44'}
+                width={scale * gridUnit}
+                height={scale * gridUnit}
+                fill="#69d5be33"
                 stroke="#69d5be"
                 strokeWidth="1"
               />
-            )),
-          )}
+            </pattern>
+          </defs>
+          <rect x={x} y={y} width={w} height={h} fill={`url(#${gridId})`} />
+          <text x="240" y="305" fill="#a7bbc8" textAnchor="middle">
+            كل مربع كامل: {gridUnit} × {gridUnit} سم
+          </text>
         </g>
       ) : (
         <path

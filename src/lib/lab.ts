@@ -228,3 +228,24 @@ export function normalizeNumber(value: string) {
       .replace(',', '.'),
   );
 }
+
+// Input validity is separate from the small default range used by sliders.
+export function validLabValues(id: string, a: number, b: number) {
+  const positive = (n: number) => Number.isFinite(n) && n > 0 && n <= 1_000_000;
+  if (!positive(a)) return false;
+  if (['triangle', 'exterior'].includes(id)) return positive(b) && a + b < 180;
+  if (['isosceles', 'parallel', 'circle'].includes(id)) return a < 180;
+  if (id === 'polygon') return Number.isInteger(a) && a >= 3 && a <= 100;
+  if (id === 'fractions') return a <= 100 && positive(b);
+  return (
+    ['rectangle', 'right', 'ratio', 'speed', 'physics', 'chemistry'].includes(id) && positive(b)
+  );
+}
+
+export function labInputHelp(id: string) {
+  if (['triangle', 'exterior'].includes(id)) return 'زاويتان موجبتان مجموعهما أقل من 180°';
+  if (['isosceles', 'parallel', 'circle'].includes(id)) return 'زاوية أكبر من صفر وأقل من 180°';
+  if (id === 'polygon') return 'عدد صحيح من 3 إلى 100';
+  if (id === 'fractions') return 'النسبة أكبر من صفر وحتى 100، والكمية موجبة';
+  return 'قيمة موجبة حتى 1,000,000؛ تقبل الكسور العشرية';
+}

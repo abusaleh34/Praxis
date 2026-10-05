@@ -1,22 +1,35 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Shell } from '@/components/shell';
 import { Exercise } from '@/components/mentor/exercise';
 import { lessons } from '@/lib/mentor-catalog';
 import { rememberMentor, safeDestination } from '@/lib/mentor-navigation';
 export default function Challenge() {
-  const [mode, setMode] = useState<'speed' | 'exam'>('speed'),
-    [lesson, setLesson] = useState('triangle'),
-    [ready, setReady] = useState(false);
+  return (
+    <Suspense
+      fallback={
+        <Shell>
+          <p>نحمّل التدريب…</p>
+        </Shell>
+      }
+    >
+      <ChallengeContent />
+    </Suspense>
+  );
+}
+function ChallengeContent() {
+  const params = useSearchParams();
+  const mode = params.get('mode') === 'exam' ? 'exam' : 'speed';
+  const lesson = lessons.some((l) => l.id === params.get('skill'))
+    ? params.get('skill')!
+    : 'triangle';
+  const [ready, setReady] = useState(false);
   useEffect(() => {
     if (!location.search) {
       const saved = sessionStorage.getItem('praxis-context:/challenge');
       if (saved) history.replaceState(null, '', safeDestination(saved));
     }
-    const q = new URLSearchParams(location.search);
-    if (q.get('mode') === 'exam') setMode('exam');
-    const s = q.get('skill');
-    if (s && lessons.some((l) => l.id === s)) setLesson(s);
     setReady(true);
   }, []);
   function reset(nextMode = mode, nextLesson = lesson) {
@@ -42,7 +55,6 @@ export default function Challenge() {
             aria-pressed={mode === 'speed'}
             onClick={() => {
               reset('speed');
-              setMode('speed');
             }}
           >
             سرعة مع تلميحات
@@ -51,7 +63,6 @@ export default function Challenge() {
             aria-pressed={mode === 'exam'}
             onClick={() => {
               reset('exam');
-              setMode('exam');
             }}
           >
             تدريب مؤقّت بلا تلميحات
@@ -64,7 +75,6 @@ export default function Challenge() {
               value={lesson}
               onChange={(e) => {
                 reset(mode, e.target.value);
-                setLesson(e.target.value);
               }}
             >
               {lessons.map((l) => (
@@ -81,7 +91,9 @@ export default function Challenge() {
             : 'ستة أسئلة متنوعة في ست دقائق. إذا تعثّرت، انتقل للسؤال التالي بدل استنزاف الوقت.'}
         </p>
       </section>
-      {ready && <Exercise key={mode + lesson} mode={mode} lesson={lesson} />}
+      {ready && (
+        <Exercise key={mode + lesson} mode={mode} lesson={lesson} batchId={params.get('batch')} />
+      )}
     </Shell>
   );
 }

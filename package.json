@@ -21,7 +21,8 @@
     "quality:ai": "node --env-file-if-exists=.env.local scripts/evaluate-ai.mjs",
     "prebuild": "node scripts/prepare-ocr.mjs",
     "predev": "node scripts/prepare-ocr.mjs",
-    "test:e2e:mentor": "node --env-file-if-exists=.env.local scripts/e2e-mentor.mjs"
+    "test:e2e:mentor": "node --env-file-if-exists=.env.local scripts/e2e-mentor.mjs",
+    "test:e2e:review": "node scripts/e2e-mentor-review.mjs"
   },
   "dependencies": {
     "next": "16.3.8",

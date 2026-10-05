@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
+import { useQuestionTimer } from './use-question-timer';
 import { api, post } from '../client';
 import { Geometry } from '../geometry';
 import type { Diagram } from '@/lib/types';
@@ -30,6 +31,8 @@ type Question = {
   steps?: string[];
   fast?: string;
   condition?: string;
+  bridge?: string;
+  explanationHref?: string;
 };
 type Batch = {
   id: string;
@@ -47,10 +50,14 @@ export function Exercise({
   lesson,
   mode = 'learn',
   reviewOnly = false,
+  active = true,
+  batchId,
 }: {
   lesson: string;
   mode?: 'learn' | 'speed' | 'exam';
   reviewOnly?: boolean;
+  active?: boolean;
+  batchId?: string | null;
 }) {
   const [batch, setBatch] = useState<Batch | null>(null),
     [choice, setChoice] = useState<number | null>(null),
@@ -59,7 +66,6 @@ export function Exercise({
     [busy, setBusy] = useState(false),
     [error, setError] = useState(''),
     [guest, setGuest] = useState(false),
-    [seconds, setSeconds] = useState(0),
     [remaining, setRemaining] = useState(360),
     [sessions, setSessions] = useState<any[]>([]);
   const [guide, setGuide] = useState<Guide | null>(null),
@@ -68,9 +74,15 @@ export function Exercise({
   const [model, setModel] = useState(false),
     [message, setMessage] = useState(''),
     [chat, setChat] = useState<Array<{ role: 'user' | 'assistant'; content: string }>>([]);
-  const elapsed = useRef(0),
-    expired = useRef(false);
+  const expired = useRef(false),
+    requestedBatch = useRef<string | null>(null);
   const q = batch?.question;
+  const { seconds, readElapsed } = useQuestionTimer(
+    q?.id,
+    active && !reviewOnly && !busy && !batch?.finished && !feedback?.resolved && !submitReview,
+    q?.elapsedMs ?? 0,
+  );
+
   async function load(id: string, position?: number) {
     setBusy(true);
     setError('');
@@ -115,10 +127,21 @@ export function Exercise({
         setModel(d.vision);
       })
       .catch(failure);
-    const id = new URLSearchParams(location.search).get('batch');
-    if (id && /^[a-f0-9-]{36}$/.test(id)) void load(id);
     setLoginHref('/start?next=' + encodeURIComponent(location.pathname + location.search));
-  }, []);
+  }, [reviewOnly]);
+  useEffect(() => {
+    const id = batchId ?? null;
+    if (requestedBatch.current === id) return;
+    requestedBatch.current = id;
+    if (id && /^[a-f0-9-]{36}$/.test(id)) void load(id);
+    else {
+      setBatch(null);
+      setFeedback(null);
+      setChoice(null);
+      setHint('');
+      setGuide(null);
+    }
+  }, [batchId]);
   useEffect(() => {
     setLoginHref('/start?next=' + encodeURIComponent(location.pathname + location.search));
   }, [reviewOnly, lesson]);
@@ -126,23 +149,6 @@ export function Exercise({
     setChat([]);
     setMessage('');
   }, [q?.id]);
-  useEffect(() => {
-    if (!q?.id) return;
-    const key = 'praxis-time:' + q.id;
-    elapsed.current = Number(sessionStorage.getItem(key)) || 0;
-    setSeconds(Math.floor(elapsed.current / 1000));
-    let previous = performance.now();
-    const t = setInterval(() => {
-      const now = performance.now();
-      if (!document.hidden && !feedback?.resolved) {
-        elapsed.current += now - previous;
-        sessionStorage.setItem(key, String(Math.floor(elapsed.current)));
-        setSeconds(Math.floor(elapsed.current / 1000));
-      }
-      previous = now;
-    }, 500);
-    return () => clearInterval(t);
-  }, [q?.id, feedback?.resolved]);
   useEffect(() => {
     if (!batch?.deadline || batch.finished) return;
     const t = setInterval(() => {
@@ -161,7 +167,9 @@ export function Exercise({
     try {
       const d = await post<{ id: string }>('mentor', { action: 'start', lesson, mode });
       const url = new URL(location.href);
+      requestedBatch.current = d.id;
       url.searchParams.set('batch', d.id);
+      url.searchParams.set('view', 'practice');
       url.searchParams.set('mode', mode);
       url.searchParams.set('skill', lesson);
       history.replaceState(null, '', url);
@@ -182,7 +190,7 @@ export function Exercise({
         action: 'answer',
         id: q.id,
         choice: skip ? -1 : (choice ?? -1),
-        elapsedMs: Math.min(3600000, Math.floor(elapsed.current)),
+        elapsedMs: readElapsed(),
         reveal,
       });
       if (batch.mode === 'exam') {
@@ -259,7 +267,7 @@ export function Exercise({
           action: 'answer',
           id: q.id,
           choice,
-          elapsedMs: Math.min(3600000, Math.floor(elapsed.current)),
+          elapsedMs: readElapsed(),
         });
       await load(batch.id, position);
     } catch (e) {
@@ -295,7 +303,7 @@ export function Exercise({
           action: 'answer',
           id: q.id,
           choice,
-          elapsedMs: Math.min(3600000, Math.floor(elapsed.current)),
+          elapsedMs: readElapsed(),
         });
       await load(batch.id, q ? batch.index : undefined);
       setSubmitReview(true);
@@ -322,6 +330,28 @@ export function Exercise({
       setBusy(false);
     }
   }
+  if (reviewOnly)
+    return (
+      <section className="panel session-history" aria-label="جلساتك السابقة">
+        <h2>راجع تدريباتك</h2>
+        {error && (
+          <p role="alert" className="error">
+            {error}
+          </p>
+        )}
+        {guest && <Link href={loginHref}>ادخل لعرض جلساتك</Link>}
+        <div className="session-links">
+          {sessions.map((s) => (
+            <Link key={s.id} className="text-button" href={sessionHref(s)}>
+              {s.mode === 'exam' ? 'تدريب مؤقّت' : lessonById.get(s.lesson)?.name} ·{' '}
+              {new Date(s.created_at).toLocaleDateString('ar-SA')} ·{' '}
+              {s.completed_at ? 'النتيجة' : 'استئناف'}
+            </Link>
+          ))}
+        </div>
+        {!guest && !sessions.length && <p>لا توجد جلسات بعد. انتقل إلى «جرّب» وابدأ تدريبًا.</p>}
+      </section>
+    );
   return (
     <section className="panel exercise" id="practice">
       <div className="panel-heading">
@@ -335,7 +365,7 @@ export function Exercise({
               ? 'ستة أسئلة في ست دقائق'
               : mode === 'speed'
                 ? 'حاول في أقل من دقيقة'
-                : 'ثلاث مسائل للفكرة نفسها'}
+                : 'ثلاث مسائل متدرّجة'}
           </h2>
         </div>
         {!batch && !reviewOnly && (
@@ -480,6 +510,9 @@ export function Exercise({
           {q ? (
             <>
               <h3>{q.name}</h3>
+              {q.bridge && batch.mode !== 'exam' && (
+                <p className="notice problem-bridge">{q.bridge}</p>
+              )}
               <h2>{q.prompt}</h2>
               {q.passage && <blockquote className="reading-passage">{q.passage}</blockquote>}
               <div className={q.diagram ? 'exercise-grid' : ''}>
@@ -707,7 +740,10 @@ export function Exercise({
                   نفسها من أول مرة.
                 </p>
               )}
-              <Link href={'/mentor?skill=' + r.lesson} className="text-button">
+              <Link
+                href={r.explanationHref ?? '/mentor?skill=' + r.lesson + '&view=learn'}
+                className="text-button"
+              >
                 افهم {r.name} بالرسم ←
               </Link>
             </article>

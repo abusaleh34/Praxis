@@ -1,5 +1,6 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Shell } from '@/components/shell';
 import { lessons, lessonById } from '@/lib/mentor-catalog';
@@ -8,42 +9,37 @@ import { Exercise } from '@/components/mentor/exercise';
 import { PhotoQuestion } from '@/components/mentor/photo';
 import { rememberMentor, safeDestination } from '@/lib/mentor-navigation';
 export default function Mentor() {
-  const [lesson, setLesson] = useState('triangle'),
-    [category, setCategory] = useState('هندسة'),
-    [ready, setReady] = useState(false),
-    [view, setView] = useState('learn'),
-    [imported, setImported] = useState<{
-      a: number;
-      b: number;
-      stamp: number;
-      target?: 'area' | 'perimeter';
-      step?: number;
-    }>();
+  return (
+    <Suspense
+      fallback={
+        <Shell>
+          <p>نحمّل المدرّب…</p>
+        </Shell>
+      }
+    >
+      <MentorContent />
+    </Suspense>
+  );
+}
+function MentorContent() {
+  const params = useSearchParams();
+  const lesson = lessonById.has(params.get('skill') ?? '') ? params.get('skill')! : 'triangle';
+  const category = lessonById.get(lesson)!.category;
+  const requestedView = params.get('view');
+  const view = ['learn', 'practice', 'review'].includes(requestedView ?? '')
+    ? requestedView!
+    : params.has('batch')
+      ? 'practice'
+      : 'learn';
+  const [ready, setReady] = useState(false);
   useEffect(() => {
     if (!location.search) {
       const saved = sessionStorage.getItem('praxis-context:/mentor');
       if (saved) history.replaceState(null, '', safeDestination(saved));
     }
-    const params = new URLSearchParams(location.search);
-    const key = params.get('skill');
-    if (key && lessonById.has(key)) {
-      setLesson(key);
-      setCategory(lessonById.get(key)!.category);
-    }
-    setView(params.has('batch') ? 'practice' : (params.get('view') ?? 'learn'));
-    if (params.has('a') && params.has('b'))
-      setImported({
-        a: Number(params.get('a')),
-        b: Number(params.get('b')),
-        target: params.get('target') === 'perimeter' ? 'perimeter' : 'area',
-        step: Math.min(2, Math.max(0, Number(params.get('step')) || 0)),
-        stamp: Date.now(),
-      });
     setReady(true);
   }, []);
   function choose(id: string) {
-    setLesson(id);
-    setImported(undefined);
     const u = new URL(location.href);
     u.searchParams.set('skill', id);
     u.searchParams.delete('batch');
@@ -52,7 +48,6 @@ export default function Mentor() {
     rememberMentor();
   }
   function switchView(next: string) {
-    setView(next);
     const u = new URL(location.href);
     u.searchParams.set('view', next);
     history.replaceState(null, '', u);
@@ -89,7 +84,6 @@ export default function Mentor() {
                 key={c}
                 aria-pressed={category === c}
                 onClick={() => {
-                  setCategory(c);
                   choose(lessons.find((l) => l.category === c)!.id);
                 }}
               >
@@ -119,24 +113,29 @@ export default function Mentor() {
         <PhotoQuestion
           onApply={(id, a, b, target) => {
             choose(id);
-            setCategory(lessonById.get(id)!.category);
-            setImported({ a, b, target, stamp: Date.now() });
+            const u = new URL(location.href);
+            Object.entries({ a, b, target, step: 0, view: 'learn' }).forEach(([k, v]) =>
+              u.searchParams.set(k, String(v)),
+            );
+            history.replaceState(null, '', u);
+            rememberMentor();
             document.getElementById('lab')?.scrollIntoView({ behavior: 'smooth' });
           }}
         />
         <div id="lab">
-          {ready && (
-            <Lab
-              key={lesson}
-              lesson={lesson}
-              imported={imported}
-              onPractice={() => switchView('practice')}
-            />
-          )}
+          {ready && <Lab key={lesson} lesson={lesson} onPractice={() => switchView('practice')} />}
         </div>
       </div>
       <div hidden={view === 'learn'}>
-        {ready && <Exercise key={lesson} lesson={lesson} reviewOnly={view === 'review'} />}
+        {ready && (
+          <Exercise
+            key={lesson}
+            lesson={lesson}
+            active={view === 'practice'}
+            reviewOnly={view === 'review'}
+            batchId={params.get('batch')}
+          />
+        )}
       </div>
     </Shell>
   );

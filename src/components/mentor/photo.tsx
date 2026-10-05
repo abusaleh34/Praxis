@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
 import { api, post } from '../client';
-import { labModel, normalizeNumber } from '@/lib/lab';
+import { labModel, normalizeNumber, validLabValues, labInputHelp } from '@/lib/lab';
 import { lessonById } from '@/lib/mentor-catalog';
 import { questionIntent } from '@/lib/question-intent';
 const templates = [
@@ -125,20 +125,12 @@ export function PhotoQuestion({
     if (!lesson || !m) return;
     const av = normalizeNumber(a),
       bv = normalizeNumber(b) || 0;
-    const current = labModel(lessonId, av, bv, target);
     const valid =
       a.trim() !== '' &&
-      Number.isFinite(av) &&
-      (lesson !== 'polygon' || Number.isInteger(av)) &&
-      av >= current.ranges[0][0] &&
-      av <= current.ranges[0][1] &&
-      (current.labels.length === 1 ||
-        (b.trim() !== '' &&
-          Number.isFinite(bv) &&
-          bv >= current.ranges[1][0] &&
-          bv <= current.ranges[1][1]));
+      (m.labels.length === 1 || b.trim() !== '') &&
+      validLabValues(lessonId, av, bv);
     if (!valid) {
-      setError('القيم خارج نطاق المختبر. راجع الحدود المكتوبة بجانب كل حقل.');
+      setError('راجع القيم: ' + labInputHelp(lessonId));
       return;
     }
     onApply(lessonId, av, bv, target);
@@ -243,7 +235,7 @@ export function PhotoQuestion({
           </label>
           {m?.labels.map((label, i) => (
             <label key={label}>
-              {label} ({m.ranges[i][0]}–{m.ranges[i][1]})
+              {label} — {labInputHelp(lessonId)}
               <input
                 inputMode="decimal"
                 value={i === 0 ? a : b}

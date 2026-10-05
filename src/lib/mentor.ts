@@ -4,6 +4,7 @@ import { db } from './db';
 import { ApiError, limit } from './auth';
 import { lessonById } from './mentor-catalog';
 import { makeProblem } from './mentor-problems';
+import { problemGuidance } from './problem-guidance';
 import { guideFor, publicGuide } from './mentor-guides';
 
 export async function startMentor(pid: string, lesson: string, mode: 'learn' | 'speed' | 'exam') {
@@ -41,6 +42,7 @@ export async function mentorState(pid: string, id: string, position?: number) {
       id: a.id,
       lesson: a.lesson,
       name: meta.name,
+      ...(!timed || reveal ? { bridge: problemGuidance(a.lesson, a.variant).bridge } : {}),
       prompt: p.prompt,
       choices: p.choices,
       unit: p.unit,
@@ -59,7 +61,7 @@ export async function mentorState(pid: string, id: string, position?: number) {
       resolved: a.resolved,
       elapsedMs: a.elapsed_ms ?? 0,
       ...(reveal
-        ? { answer: p.answer, steps: p.steps, fast: meta.fast, condition: meta.condition }
+        ? { answer: p.answer, steps: p.steps, ...problemGuidance(a.lesson, a.variant) }
         : {}),
       ...(!timed && a.hint_count
         ? {
