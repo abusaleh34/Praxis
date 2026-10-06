@@ -152,6 +152,12 @@ try {
     });
     assert.equal(retry.correct, true);
     assert(retry.steps.length);
+    await post('/api/mentor', {
+      action: 'answer',
+      id: s.question.id,
+      choice: correct,
+      elapsedMs: 99999,
+    });
     const next = await get('/api/mentor?id=' + b.id);
     assert.equal(next.index, 1);
     assert.notEqual(next.question.prompt, s.question.prompt);
@@ -172,7 +178,10 @@ try {
     const done = await get('/api/mentor?id=' + b.id);
     assert.equal(done.results[0].firstCorrect, false);
     assert.equal(done.results[0].assisted, true);
-    assert.equal(done.results[0].elapsedMs, 70000);
+    assert.equal(done.results[0].elapsedMs, 74000);
+    const [firstAttempt] =
+      await sql`SELECT elapsed_ms FROM mentor_attempts WHERE activity_id=${s.question.id} AND participant_id=${p.id}`;
+    assert.equal(firstAttempt.elapsed_ms, 70000, 'first-attempt evidence remains unchanged');
   });
   await check(
     'Timed practice hides grading, denies hints, and enforces its server deadline',

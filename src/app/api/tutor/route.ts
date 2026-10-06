@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
       throw new ApiError(503, 'الحوار الحر غير متاح حاليًا. استخدم التلميحات المتدرجة.');
     // Count model help before requesting it so it cannot look like unassisted work.
     await db()`UPDATE mentor_activities SET hint_count=hint_count+1 WHERE id=${a.id}`;
-    const problem = makeProblem(a.lesson, a.seed, a.variant),
+    const problem = makeProblem(a.lesson, a.seed, a.variant, a.content_set),
       meta = lessonById.get(a.lesson)!;
     const r = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',

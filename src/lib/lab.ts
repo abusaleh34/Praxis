@@ -195,7 +195,7 @@ export function labModel(id: string, a: number, b: number, target: 'area' | 'per
       unit = id === 'physics' ? 'متر' : 'كم';
       formula = `${a} × ${b} = ${result} ${unit}`;
       checkpoint = {
-        question: 'أي عملية تربط السرعة بالزمن لإيجاد المسافة؟ اكتب 1 للضرب، أو 2 للقسمة.',
+        question: 'أي عملية تربط السرعة بالزمن لإيجاد المسافة؟',
         answer: 1,
         hint: 'فكّر: هل تزيد المسافة بزيادة الزمن مع ثبات السرعة؟',
       };

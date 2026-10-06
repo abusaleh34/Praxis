@@ -3,7 +3,17 @@ import { useEffect, useId, useState } from 'react';
 
 const colors = ['#69d5be', '#f1c36c', '#b9a2ee'];
 const rad = (n: number) => (n * Math.PI) / 180;
-export function TriangleProof({ a, b, step }: { a: number; b: number; step: number }) {
+export function TriangleProof({
+  a,
+  b,
+  step,
+  reveal = false,
+}: {
+  a: number;
+  b: number;
+  step: number;
+  reveal?: boolean;
+}) {
   const [progress, setProgress] = useState(0);
   useEffect(() => {
     setProgress(step > 0 ? 100 : 0);
@@ -66,14 +76,14 @@ export function TriangleProof({ a, b, step }: { a: number; b: number; step: numb
                   fill={colors[i]}
                   fontSize="17"
                 >
-                  {angle}°
+                  {i === 2 && !reveal ? 'س' : `${Number(angle.toFixed(2))}°`}
                 </text>
               </g>
             </g>
           );
         })}
         <text x="240" y="355" textAnchor="middle" fill="white" fontSize="19" opacity={t}>
-          {a}° + {b}° + {180 - a - b}° = 180°
+          {a}° + {b}° + {reveal ? `${Number((180 - a - b).toFixed(2))}°` : 'س'} = 180°
         </text>
       </svg>
       <label>

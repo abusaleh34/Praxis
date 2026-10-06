@@ -1,4 +1,5 @@
 import 'server-only';
+import { verbalSets } from './verbal-bank';
 import { randomInt } from 'node:crypto';
 import { db } from './db';
 import { ApiError, limit } from './auth';
@@ -11,12 +12,30 @@ export async function startMentor(pid: string, lesson: string, mode: 'learn' | '
   if (!lessonById.has(lesson)) throw new ApiError(400, 'اختر مهارة متاحة.');
   await limit('mentor-start:' + pid, 40);
   return db().begin(async (tx) => {
+    await tx`SELECT id FROM participants WHERE id=${pid} FOR UPDATE`;
     const [batch] =
       await tx`INSERT INTO mentor_batches(participant_id,mode,deadline) VALUES(${pid},${mode},CASE WHEN ${mode}='exam' THEN now()+interval '6 minutes' ELSE NULL END) RETURNING id`;
     const mixed = ['triangle', 'ratio', 'analogy', 'circle', 'fractions', 'reading'];
     const count = mode === 'exam' ? 6 : 3;
-    for (let i = 0; i < count; i++)
-      await tx`INSERT INTO mentor_activities(participant_id,lesson,seed,variant,mode,batch_id,position) VALUES(${pid},${mode === 'exam' ? mixed[i] : lesson},${randomInt(1000000)},${i % 3},${mode},${batch.id},${i})`;
+    const sets = new Map<string, number>();
+    for (const skill of mode === 'exam' ? ['analogy', 'reading'] : [lesson]) {
+      if (!['analogy', 'reading'].includes(skill)) continue;
+      const used =
+        await tx`SELECT content_set,count(*)::int AS count,max(created_at) AS last_used FROM mentor_activities WHERE participant_id=${pid} AND lesson=${skill} GROUP BY content_set`;
+      const ranked = [...verbalSets].sort((a, b) => {
+        const left = used.find((r) => r.content_set === a),
+          right = used.find((r) => r.content_set === b);
+        return (
+          (left?.count ?? 0) - (right?.count ?? 0) ||
+          new Date(left?.last_used ?? 0).getTime() - new Date(right?.last_used ?? 0).getTime()
+        );
+      });
+      sets.set(skill, ranked[0]);
+    }
+    for (let i = 0; i < count; i++) {
+      const skill = mode === 'exam' ? mixed[i] : lesson;
+      await tx`INSERT INTO mentor_activities(participant_id,lesson,seed,variant,mode,batch_id,position,content_set) VALUES(${pid},${skill},${randomInt(1000000)},${i % 3},${mode},${batch.id},${i},${sets.get(skill) ?? 0})`;
+    }
     return { id: batch.id };
   });
 }
@@ -36,7 +55,7 @@ export async function mentorState(pid: string, id: string, position?: number) {
       ? rows.find((a) => a.position === position)
       : rows.find((a) => (timed ? a.first_choice === null : !a.resolved));
   const show = (a: (typeof rows)[number], reveal: boolean) => {
-    const p = makeProblem(a.lesson, a.seed, a.variant),
+    const p = makeProblem(a.lesson, a.seed, a.variant, a.content_set),
       meta = lessonById.get(a.lesson)!;
     return {
       id: a.id,
@@ -54,19 +73,19 @@ export async function mentorState(pid: string, id: string, position?: number) {
       flagged: a.flagged,
       guide:
         !timed && a.hint_count
-          ? publicGuide(guideFor(a.lesson, a.seed, a.variant), a.guide_step)
+          ? publicGuide(guideFor(a.lesson, a.seed, a.variant, a.content_set), a.guide_step)
           : null,
       firstCorrect: a.correct,
       assisted: a.assisted,
       resolved: a.resolved,
-      elapsedMs: a.elapsed_ms ?? 0,
+      elapsedMs: Math.max(a.solving_ms, a.elapsed_ms ?? 0),
       ...(reveal
         ? { answer: p.answer, steps: p.steps, ...problemGuidance(a.lesson, a.variant) }
         : {}),
       ...(!timed && a.hint_count
         ? {
             hint:
-              a.guide_step >= guideFor(a.lesson, a.seed, a.variant).length
+              a.guide_step >= guideFor(a.lesson, a.seed, a.variant, a.content_set).length
                 ? 'استخدم العلاقة التي توصلت إليها، ثم جرّب إجابة السؤال.'
                 : 'نحدد موضع التعثر خطوة بخطوة.',
           }
@@ -114,7 +133,9 @@ export async function answerMentor(
       throw new ApiError(409, 'انتهى وقت الجلسة. اعرض النتيجة.');
     if (a.mode === 'exam' && reveal)
       throw new ApiError(403, 'الشرح متاح بعد تسليم التدريب المؤقّت.');
-    const p = makeProblem(a.lesson, a.seed, a.variant);
+    const p = makeProblem(a.lesson, a.seed, a.variant, a.content_set);
+    if (a.mode === 'exam' || !a.resolved)
+      await tx`UPDATE mentor_activities SET solving_ms=GREATEST(solving_ms,${elapsedMs}) WHERE id=${id}`;
     if (a.mode === 'exam') {
       // Exam choices are drafts until submission. Keep the first choice for
       // review, but grade the final saved answer and never reveal it in-flight.
@@ -168,7 +189,7 @@ export async function hintMentor(pid: string, id: string) {
   if (!a) throw new ApiError(409, 'التلميحات غير متاحة لهذا السؤال الآن.');
   return {
     hint: 'أجب عن هذه الخطوة لنحدد ما تحتاجه قبل إعادة المحاولة.',
-    guide: publicGuide(guideFor(a.lesson, a.seed, a.variant), a.guide_step),
+    guide: publicGuide(guideFor(a.lesson, a.seed, a.variant, a.content_set), a.guide_step),
   };
 }
 export async function answerGuide(pid: string, id: string, index: number, choice: number) {
@@ -184,7 +205,7 @@ export async function answerGuide(pid: string, id: string, index: number, choice
       a.guide_step !== index
     )
       throw new ApiError(409, 'حدّث السؤال قبل متابعة التلميح.');
-    const steps = guideFor(a.lesson, a.seed, a.variant),
+    const steps = guideFor(a.lesson, a.seed, a.variant, a.content_set),
       step = steps[index];
     if (!step) throw new ApiError(409, 'اكتملت الخطوات؛ جرّب إجابة السؤال.');
     const correct = step.answer === choice;
@@ -215,4 +236,16 @@ export async function finishMentor(pid: string, id: string) {
     await db()`UPDATE mentor_batches SET completed_at=COALESCE(completed_at,now()) WHERE id=${id} AND participant_id=${pid} RETURNING id`;
   if (!result.length) throw new ApiError(404, 'الجلسة غير موجودة.');
   return { ok: true };
+}
+
+// Idempotent time-only writes must not create attempts or reveal grading state.
+export async function saveMentorTime(pid: string, id: string, elapsedMs: number) {
+  return db().begin(async (tx) => {
+    const [a] =
+      await tx`SELECT a.id,a.mode,a.resolved,b.completed_at FROM mentor_activities a JOIN mentor_batches b ON b.id=a.batch_id WHERE a.id=${id} AND a.participant_id=${pid} FOR UPDATE OF a,b`;
+    if (!a) throw new ApiError(404, 'السؤال غير موجود.');
+    if (a.completed_at || (a.mode !== 'exam' && a.resolved)) return { saved: false };
+    await tx`UPDATE mentor_activities SET solving_ms=GREATEST(solving_ms,${elapsedMs}) WHERE id=${id}`;
+    return { saved: true };
+  });
 }

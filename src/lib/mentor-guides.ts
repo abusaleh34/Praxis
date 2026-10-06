@@ -1,5 +1,10 @@
 export type GuideStep = { question: string; choices: string[]; answer: number; hint: string };
-export function guideFor(lesson: string, seed: number, variant: number): GuideStep[] {
+export function guideFor(
+  lesson: string,
+  seed: number,
+  variant: number,
+  contentSet = 0,
+): GuideStep[] {
   const n = Math.abs(seed) % 7,
     v = ((variant % 3) + 3) % 3;
   const step = (question: string, right: string, wrong: string[], hint: string): GuideStep => {
@@ -186,11 +191,17 @@ export function guideFor(lesson: string, seed: number, variant: number): GuideSt
         'ما نوع العلاقة في الزوج الأول؟',
         ['أداة ووظيفتها', 'جزء وكل', 'حاجة وما يسدها'][v],
         ['أداة ووظيفتها', 'جزء وكل', 'حاجة وما يسدها'].filter((_, i) => i !== v),
-        [
-          'نسأل: ما الذي نفعله بالقلم؟',
-          'نسأل: هل الصفحة تضم الكتاب أم الكتاب يضم الصفحة؟',
-          'نسأل: ما الذي يزيل العطش؟',
-        ][v],
+        contentSet
+          ? [
+              'اسأل عن وظيفة الأداة الأولى ثم اختبر وظيفة الأداة في كل خيار.',
+              'حدد الجزء والكل، وحافظ على ترتيبهما.',
+              'حدد الحاجة ثم ما يسدها؛ لا تعكس اتجاه العلاقة.',
+            ][v]
+          : [
+              'نسأل: ما الذي نفعله بالقلم؟',
+              'نسأل: هل الصفحة تضم الكتاب أم الكتاب يضم الصفحة؟',
+              'نسأل: ما الذي يزيل العطش؟',
+            ][v],
       ),
       step(
         'كيف نختبر العلاقة في الخيارات؟',
@@ -207,7 +218,9 @@ export function guideFor(lesson: string, seed: number, variant: number): GuideSt
       'حدّد هل المطلوب عامل تغيّر أم سبب التكرار أم استنتاج.',
     ),
     step(
-      'هل تكفي تجربة واحدة للحكم على كل النباتات دائمًا؟',
+      contentSet
+        ? 'هل تكفي الملاحظة المذكورة للحكم على كل الحالات دائمًا؟'
+        : 'هل تكفي تجربة واحدة للحكم على كل النباتات دائمًا؟',
       'لا، نلتزم بما لوحظ في التجربة',
       ['نعم، دون تكرار', 'نعم، مهما اختلفت الظروف'],
       'انتبه لكلمات التعميم؛ النص يطلب التحقق قبل التعميم.',

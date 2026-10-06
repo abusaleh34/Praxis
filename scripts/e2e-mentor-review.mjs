@@ -87,6 +87,7 @@ try {
       await page.goto(`/mentor?skill=${skill}&step=2`);
       await page.locator('.mentor-lab').waitFor();
       assert((await page.locator('.lab-formula').innerText()).includes(`${result} ${unit}`));
+      await page.locator('.lesson-outline summary').click();
       assert(
         (await page.locator('.lesson-steps').innerText()).includes('نضرب') ||
           (await page.locator('.lesson-steps').innerText()).includes('اضرب'),

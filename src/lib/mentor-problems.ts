@@ -1,3 +1,4 @@
+import { analogyBank, readingBank } from './verbal-bank';
 import { createHash } from 'node:crypto';
 import type { Diagram } from './types';
 import { lessonById } from './mentor-catalog';
@@ -11,7 +12,12 @@ export type MentorProblem = {
   unit: string;
   passage?: string;
 };
-export function makeProblem(lesson: string, seed: number, variant: number): MentorProblem {
+export function makeProblem(
+  lesson: string,
+  seed: number,
+  variant: number,
+  contentSet = 0,
+): MentorProblem {
   const meta = lessonById.get(lesson);
   if (!meta) throw new Error('Unknown lesson');
   const n = Math.abs(seed) % 7,
@@ -320,6 +326,21 @@ export function makeProblem(lesson: string, seed: number, variant: number): Ment
       bank.why,
       'نستند إلى النص، لا إلى افتراض إضافي.',
       'نستبعد ما لا يقدم النص دليلًا عليه.',
+    ];
+  }
+  if (contentSet !== 0 && ['analogy', 'reading'].includes(lesson)) {
+    const bank =
+      lesson === 'analogy' ? analogyBank[contentSet]?.[v] : readingBank[contentSet]?.items[v];
+    if (!bank) throw new Error('Unknown verbal content set');
+    prompt = lesson === 'analogy' ? `اختر الزوج الذي يطابق علاقة «${bank.q}».` : bank.q;
+    passage = lesson === 'reading' ? readingBank[contentSet].passage : undefined;
+    answer = bank.a;
+    wrong = bank.w;
+    steps = [
+      bank.why,
+      lesson === 'analogy'
+        ? 'اختبر العلاقة واتجاهها، لا تشابه الموضوع فقط.'
+        : 'استند إلى النص وتجنب التعميم الذي لا يدعمه.',
     ];
   }
   if (typeof answer === 'number') {

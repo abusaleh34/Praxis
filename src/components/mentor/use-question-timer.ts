@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 // Accumulate only visible, active solving time. The exam deadline remains an
 // independent wall-clock limit enforced by the server.
@@ -24,18 +24,39 @@ export function useQuestionTimer(id: string | undefined, active: boolean, savedM
       setSeconds(Math.floor(value.current / 1000));
       return value.current;
     };
+    let lastSaved = savedMs;
+    const persist = () => {
+      const elapsedMs = Math.min(3_600_000, Math.floor(flush()));
+      if (!active || elapsedMs <= lastSaved) return;
+      lastSaved = elapsedMs;
+      void fetch('/api/mentor', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'time', id, elapsedMs }),
+        keepalive: true,
+      })
+        .then((r) => {
+          if (!r.ok) lastSaved = savedMs;
+        })
+        .catch(() => {
+          lastSaved = savedMs;
+        });
+    };
     read.current = flush;
     setSeconds(Math.floor(value.current / 1000));
     const t = setInterval(flush, 500);
-    document.addEventListener('visibilitychange', flush);
-    window.addEventListener('pagehide', flush);
+    const saving = setInterval(persist, 10_000);
+    document.addEventListener('visibilitychange', persist);
+    window.addEventListener('pagehide', persist);
     return () => {
-      flush();
+      persist();
       clearInterval(t);
-      document.removeEventListener('visibilitychange', flush);
-      window.removeEventListener('pagehide', flush);
+      clearInterval(saving);
+      document.removeEventListener('visibilitychange', persist);
+      window.removeEventListener('pagehide', persist);
       read.current = () => value.current;
     };
   }, [id, active, savedMs]);
-  return { seconds, readElapsed: () => Math.min(3_600_000, Math.floor(read.current())) };
+  const readElapsed = useCallback(() => Math.min(3_600_000, Math.floor(read.current())), []);
+  return { seconds, readElapsed };
 }

@@ -144,7 +144,7 @@ export async function overview(participantId: string): Promise<Overview> {
     sql`SELECT id,created_at FROM participants WHERE id=${participantId}`,
     sql`SELECT * FROM study_sessions WHERE participant_id=${participantId} ORDER BY started_at DESC`,
     sql`SELECT a.question_id,a.correct,a.created_at,s.kind,EXISTS(SELECT 1 FROM hint_events h WHERE h.session_id=a.session_id AND h.question_id=a.question_id AND h.created_at<=a.created_at) AS assisted FROM attempts a JOIN study_sessions s ON s.id=a.session_id WHERE a.participant_id=${participantId} AND (s.kind='practice' OR s.completed_at IS NOT NULL)`,
-    sql`SELECT a.*,m.lesson,m.variant,m.seed FROM mentor_attempts a JOIN mentor_activities m ON m.id::text=a.activity_id JOIN mentor_batches b ON b.id=m.batch_id WHERE a.participant_id=${participantId} AND (m.mode<>'exam' OR b.completed_at IS NOT NULL)`,
+    sql`SELECT a.*,m.lesson,m.variant,m.seed,m.content_set FROM mentor_attempts a JOIN mentor_activities m ON m.id::text=a.activity_id JOIN mentor_batches b ON b.id=m.batch_id WHERE a.participant_id=${participantId} AND (m.mode<>'exam' OR b.completed_at IS NOT NULL)`,
     sql`SELECT b.id,b.mode,b.completed_at,min(m.lesson) AS lesson,count(m.id)::int AS total,count(t.activity_id) FILTER(WHERE t.correct)::int AS score FROM mentor_batches b JOIN mentor_activities m ON m.batch_id=b.id LEFT JOIN mentor_attempts t ON t.activity_id=m.id::text AND t.participant_id=b.participant_id WHERE b.participant_id=${participantId} AND b.completed_at IS NOT NULL GROUP BY b.id`,
   ]);
   const completed = sessions.filter((s) => s.completed_at),
@@ -186,7 +186,7 @@ export async function overview(participantId: string): Promise<Overview> {
     adaptive: adaptiveProfile([
       ...mentorRows.map((e) => ({
         skill: e.skill,
-        question: `${e.lesson}:${e.variant}:${['analogy', 'reading'].includes(e.lesson) ? 0 : e.seed % 7}`,
+        question: `${e.lesson}:${e.variant}:${['analogy', 'reading'].includes(e.lesson) ? e.content_set : e.seed % 7}`,
         correct: e.correct,
         assisted: e.assisted,
         kind: 'practice',

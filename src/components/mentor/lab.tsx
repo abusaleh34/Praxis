@@ -104,11 +104,10 @@ export function Lab({ lesson, onPractice }: { lesson: string; onPractice: () => 
     setFeedback('');
     setAnswer('');
   }
-  function check(e: React.FormEvent) {
-    e.preventDefault();
-    if (!answer.trim()) return;
+  function check(value: string) {
+    if (!value.trim()) return;
     const expected = stage === 0 ? m.checkpoint.answer : m.result;
-    if (Math.abs(normalizeNumber(answer) - expected) < 0.015) {
+    if (Math.abs(normalizeNumber(value) - expected) < 0.015) {
       setFeedback(
         stage === 0
           ? 'صحيح. الآن استخدم ما وصلت إليه لإيجاد المطلوب.'
@@ -138,99 +137,157 @@ export function Lab({ lesson, onPractice }: { lesson: string; onPractice: () => 
         </p>
       )}
       <div className="lab-grid">
-        <div className="lab-visual">
-          {lesson === 'triangle' && <TriangleProof a={a} b={b} step={step} />}
-          {lesson === 'rectangle' && <RectangleProof a={a} b={b} step={step} target={target} />}
-          {m.diagram && !['triangle', 'rectangle'].includes(lesson) && (
-            <Geometry
-              diagram={m.diagram}
-              highlight={
-                step === 0 ? 'known' : step === 1 ? (lesson === 'circle' ? 'arc' : 'all') : 'target'
-              }
-            />
-          )}
-          {!m.diagram && !verbal && (
-            <svg className="relation-graph" viewBox="0 0 400 260" role="img" aria-label={m.formula}>
-              {['speed', 'physics'].includes(lesson) ? (
-                <>
-                  <text x="64" y="202" fill="white">
-                    0
-                  </text>
-                  <text x="200" y="45" fill="#a7bbc8" textAnchor="middle">
-                    المحاور تتدرّج لتناسب القيم
-                  </text>
-                  <path d="M55 55V210H365" fill="none" stroke="#a7bbc8" strokeWidth="2" />
-                  <text x="340" y="228" fill="#a7bbc8" textAnchor="middle" fontSize="12">
-                    {graphTime}
-                  </text>
-                  <text x="50" y="75" fill="#a7bbc8" textAnchor="end" fontSize="12">
-                    {graphDistance}
-                  </text>
-                  <circle cx={graphX} cy={graphY} r="4" fill="#f1c36c" />
-                  <path d={`M55 210L${graphX} ${graphY}`} stroke="#69d5be" strokeWidth="4" />
-                  <text x="205" y="245" fill="white" textAnchor="middle">
-                    الزمن: {b} {lesson === 'physics' ? 'ث' : 'ساعة'} — المسافة: {a * b} {m.unit}
-                  </text>
-                  <text x="200" y="20" fill="#f1c36c" textAnchor="middle">
-                    المسافة ({m.unit}) ↑ · الزمن ({lesson === 'physics' ? 'ث' : 'ساعة'}) →
-                  </text>
-                </>
-              ) : (
-                <>
-                  <rect x="45" y="80" width="310" height="50" rx="6" fill="#294650" />
-                  <rect
-                    x="45"
-                    y="80"
-                    width={lesson === 'fractions' ? (310 * a) / 100 : Math.min(310, b * 25)}
-                    height="50"
-                    rx="6"
-                    fill="#69d5be"
-                  />
-                  <text x="200" y="175" fill="white" textAnchor="middle" fontSize="20">
-                    {a} {lesson === 'fractions' ? '% من' : '×'} {b}
-                  </text>
-                </>
-              )}
-            </svg>
-          )}
-          {verbal && (
-            <div className="verbal-lab">
-              {lesson === 'analogy' ? (
-                <>
-                  <div className="semantic-flow">
-                    <strong>{['قلم', 'صفحة', 'عطش'][pair]}</strong>
-                    <span>← {['أداة تؤدي وظيفة', 'جزء من كل', 'حاجة وما يسدها'][pair]} ←</span>
-                    <strong>{['كتابة', 'كتاب', 'ماء'][pair]}</strong>
-                  </div>
-                  <div className="semantic-flow">
-                    <strong>{['فرشاة', 'غرفة', 'جوع'][pair]}</strong>
-                    <span>← العلاقة نفسها ←</span>
-                    <strong>{['رسم', 'منزل', 'طعام'][pair]}</strong>
-                  </div>
-                  <button className="button mint" onClick={() => setPair((pair + 1) % 3)}>
-                    جرّب علاقة أخرى
+        <div className="lab-visual-stack">
+          <div className="lab-visual">
+            {lesson === 'triangle' && (
+              <TriangleProof a={a} b={b} step={step} reveal={step === 2 || stage === 2} />
+            )}
+            {lesson === 'rectangle' && <RectangleProof a={a} b={b} step={step} target={target} />}
+            {m.diagram && !['triangle', 'rectangle'].includes(lesson) && (
+              <Geometry
+                diagram={m.diagram}
+                highlight={
+                  step === 0
+                    ? 'known'
+                    : step === 1
+                      ? lesson === 'circle'
+                        ? 'arc'
+                        : 'all'
+                      : 'target'
+                }
+              />
+            )}
+            {!m.diagram && !verbal && (
+              <svg
+                className="relation-graph"
+                viewBox="0 0 400 260"
+                role="img"
+                aria-label={step === 2 || stage === 2 ? m.formula : 'رسم العلاقة بين المعطيات'}
+              >
+                {['speed', 'physics'].includes(lesson) ? (
+                  <>
+                    <text x="64" y="202" fill="white">
+                      0
+                    </text>
+                    <text x="200" y="45" fill="#a7bbc8" textAnchor="middle">
+                      المحاور تتدرّج لتناسب القيم
+                    </text>
+                    <path d="M55 55V210H365" fill="none" stroke="#a7bbc8" strokeWidth="2" />
+                    <text x="340" y="228" fill="#a7bbc8" textAnchor="middle" fontSize="12">
+                      {graphTime}
+                    </text>
+                    <text x="50" y="75" fill="#a7bbc8" textAnchor="end" fontSize="12">
+                      {graphDistance}
+                    </text>
+                    <circle cx={graphX} cy={graphY} r="4" fill="#f1c36c" />
+                    <path d={`M55 210L${graphX} ${graphY}`} stroke="#69d5be" strokeWidth="4" />
+                    <text x="205" y="245" fill="white" textAnchor="middle">
+                      الزمن: {b} {lesson === 'physics' ? 'ث' : 'ساعة'} — المسافة:{' '}
+                      {step === 2 || stage === 2 ? a * b : 'س'} {m.unit}
+                    </text>
+                    <text x="200" y="20" fill="#f1c36c" textAnchor="middle">
+                      المسافة ({m.unit}) ↑ · الزمن ({lesson === 'physics' ? 'ث' : 'ساعة'}) →
+                    </text>
+                  </>
+                ) : (
+                  <>
+                    <rect x="45" y="80" width="310" height="50" rx="6" fill="#294650" />
+                    <rect
+                      x="45"
+                      y="80"
+                      width={lesson === 'fractions' ? (310 * a) / 100 : Math.min(310, b * 25)}
+                      height="50"
+                      rx="6"
+                      fill="#69d5be"
+                    />
+                    <text x="200" y="175" fill="white" textAnchor="middle" fontSize="20">
+                      {a} {lesson === 'fractions' ? '% من' : '×'} {b}
+                    </text>
+                  </>
+                )}
+              </svg>
+            )}
+            {verbal && (
+              <div className="verbal-lab">
+                {lesson === 'analogy' ? (
+                  <>
+                    <div className="semantic-flow">
+                      <strong>{['قلم', 'صفحة', 'عطش'][pair]}</strong>
+                      <span>← {['أداة تؤدي وظيفة', 'جزء من كل', 'حاجة وما يسدها'][pair]} ←</span>
+                      <strong>{['كتابة', 'كتاب', 'ماء'][pair]}</strong>
+                    </div>
+                    <div className="semantic-flow">
+                      <strong>{['فرشاة', 'غرفة', 'جوع'][pair]}</strong>
+                      <span>← العلاقة نفسها ←</span>
+                      <strong>{['رسم', 'منزل', 'طعام'][pair]}</strong>
+                    </div>
+                    <button className="button mint" onClick={() => setPair((pair + 1) % 3)}>
+                      جرّب علاقة أخرى
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <p>
+                      نباتان لهما التربة والماء نفسيهما.{' '}
+                      <mark className={step > 0 ? 'lit' : ''}>
+                        نما النبات القريب من النافذة أكثر.
+                      </mark>{' '}
+                      أوصى المعلم بتكرار التجربة قبل التعميم.
+                    </p>
+                    <div className="semantic-flow">
+                      <strong>الضوء</strong>
+                      <span>← عامل اختلف ←</span>
+                      <strong>النمو</strong>
+                    </div>
+                    <button className="button mint" onClick={() => setStep(1)}>
+                      أظهر دليل الاستنتاج
+                    </button>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
+          {!verbal && (
+            <form
+              className="socratic-box"
+              onSubmit={(e) => {
+                e.preventDefault();
+                check(answer);
+              }}
+            >
+              <span className="badge">نفكّر معًا</span>
+              <h3>
+                {stage === 0
+                  ? m.checkpoint.question
+                  : stage === 1
+                    ? 'والآن، ما قيمة المطلوب في هذا المثال؟ (قرّب إلى منزلتين عند الحاجة)'
+                    : 'أكملت المثال؛ جرّب الآن دون مساعدة'}
+              </h3>
+              {stage === 0 && ['speed', 'physics'].includes(lesson) ? (
+                <div className="action-row" role="group" aria-label="اختر العملية">
+                  <button type="button" className="button ghost" onClick={() => check('1')}>
+                    الضرب
                   </button>
-                </>
-              ) : (
-                <>
-                  <p>
-                    نباتان لهما التربة والماء نفسيهما.{' '}
-                    <mark className={step > 0 ? 'lit' : ''}>
-                      نما النبات القريب من النافذة أكثر.
-                    </mark>{' '}
-                    أوصى المعلم بتكرار التجربة قبل التعميم.
-                  </p>
-                  <div className="semantic-flow">
-                    <strong>الضوء</strong>
-                    <span>← عامل اختلف ←</span>
-                    <strong>النمو</strong>
-                  </div>
-                  <button className="button mint" onClick={() => setStep(1)}>
-                    أظهر دليل الاستنتاج
+                  <button type="button" className="button ghost" onClick={() => check('2')}>
+                    القسمة
                   </button>
-                </>
+                </div>
+              ) : (
+                stage < 2 && (
+                  <div className="action-row">
+                    <input
+                      aria-label="إجابة الخطوة"
+                      inputMode="decimal"
+                      value={answer}
+                      onChange={(e) => setAnswer(e.target.value)}
+                      placeholder="اكتب رقمًا"
+                    />
+                    <button className="button primary">تحقق من خطوتي</button>
+                  </div>
+                )
               )}
-            </div>
+              <p aria-live="polite">{feedback}</p>
+            </form>
           )}
         </div>
         <div className="lab-controls">
@@ -277,21 +334,24 @@ export function Lab({ lesson, onPractice }: { lesson: string; onPractice: () => 
               </label>
             ))}
           <p className="muted">حرّك القيم ولاحظ ما يتغير وما يبقى ثابتًا.</p>
-          <ol className="lesson-steps">
-            {steps.map((s, i) => (
-              <li key={s} className={step === i ? 'active' : ''}>
-                <button
-                  onClick={() => {
-                    setStep(i);
-                    setPlaying(false);
-                  }}
-                  aria-current={step === i ? 'step' : undefined}
-                >
-                  {s}
-                </button>
-              </li>
-            ))}
-          </ol>
+          <details className="lesson-outline">
+            <summary>جميع خطوات الشرح</summary>
+            <ol className="lesson-steps">
+              {steps.map((s, i) => (
+                <li key={s} className={step === i ? 'active' : ''}>
+                  <button
+                    onClick={() => {
+                      setStep(i);
+                      setPlaying(false);
+                    }}
+                    aria-current={step === i ? 'step' : undefined}
+                  >
+                    {s}
+                  </button>
+                </li>
+              ))}
+            </ol>
+          </details>
           <div className="action-row">
             <button
               className="button ghost small"
@@ -323,6 +383,7 @@ export function Lab({ lesson, onPractice }: { lesson: string; onPractice: () => 
               التالي
             </button>
           </div>
+          <p className="muted">الخطوة {step + 1} من 3</p>
           <p className="lab-formula" dir="auto" aria-live="polite">
             {step === 2 ? m.formula : steps[step]}
           </p>
@@ -342,31 +403,6 @@ export function Lab({ lesson, onPractice }: { lesson: string; onPractice: () => 
           <small className="muted">يتوقف توفر الصوت العربي على جهازك.</small>
         </div>
       </div>
-      {!verbal && (
-        <form className="socratic-box" onSubmit={check}>
-          <span className="badge">نفكّر معًا</span>
-          <h3>
-            {stage === 0
-              ? m.checkpoint.question
-              : stage === 1
-                ? 'والآن، ما قيمة المطلوب في هذا المثال؟ (قرّب إلى منزلتين عند الحاجة)'
-                : 'وصلت إليها بنفسك'}
-          </h3>
-          {stage < 2 && (
-            <div className="action-row">
-              <input
-                aria-label="إجابة الخطوة"
-                inputMode="decimal"
-                value={answer}
-                onChange={(e) => setAnswer(e.target.value)}
-                placeholder="اكتب رقمًا"
-              />
-              <button className="button primary">تحقق من خطوتي</button>
-            </div>
-          )}
-          <p aria-live="polite">{feedback}</p>
-        </form>
-      )}
       <div className="fast-strategy">
         <h3>طريقة أسرع للاختبار</h3>
         <p>{verbal || lesson === 'fractions' ? meta.fast : guidance.fast}</p>

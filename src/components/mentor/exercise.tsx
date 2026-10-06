@@ -71,7 +71,7 @@ export function Exercise({
   const [guide, setGuide] = useState<Guide | null>(null),
     [submitReview, setSubmitReview] = useState(false),
     [loginHref, setLoginHref] = useState('/start');
-  const [model, setModel] = useState(false),
+  const [model, setModel] = useState<boolean | null>(null),
     [message, setMessage] = useState(''),
     [chat, setChat] = useState<Array<{ role: 'user' | 'assistant'; content: string }>>([]);
   const expired = useRef(false),
@@ -160,7 +160,7 @@ export function Exercise({
       }
     }, 500);
     return () => clearInterval(t);
-  }, [batch?.id, batch?.finished]);
+  }, [batch?.id, batch?.finished, q?.id]);
   async function start() {
     setBusy(true);
     setError('');
@@ -269,6 +269,7 @@ export function Exercise({
           choice,
           elapsedMs: readElapsed(),
         });
+      await post('mentor', { action: 'time', id: q.id, elapsedMs: readElapsed() });
       await load(batch.id, position);
     } catch (e) {
       failure(e);
@@ -305,6 +306,7 @@ export function Exercise({
           choice,
           elapsedMs: readElapsed(),
         });
+      if (q) await post('mentor', { action: 'time', id: q.id, elapsedMs: readElapsed() });
       await load(batch.id, q ? batch.index : undefined);
       setSubmitReview(true);
     } catch (e) {
@@ -321,6 +323,7 @@ export function Exercise({
     }
     setBusy(true);
     try {
+      if (q) await post('mentor', { action: 'time', id: q.id, elapsedMs: readElapsed() });
       await post('mentor', { action: 'finish', id: batch.id });
       await load(batch.id);
     } catch (e) {
@@ -644,6 +647,11 @@ export function Exercise({
           ) : (
             <p>أجبت عن كل الأسئلة. سلّم التدريب لتظهر المراجعة.</p>
           )}
+          {q && model === false && batch.mode !== 'exam' && !feedback?.resolved && (
+            <p className="muted">
+              الحوار الحر غير مفعّل في هذه النسخة. اختر «ساعدني بسؤال» للتدرّب بتلميحات متدرجة.
+            </p>
+          )}
           {q && model && batch.mode !== 'exam' && (
             <form className="tutor-chat" onSubmit={ask}>
               <h3>اسأل عن الخطوة التي أوقفتك</h3>
@@ -701,7 +709,7 @@ export function Exercise({
                       : 'نراجع الفكرة'}
                 </strong>
                 <span>
-                  {Math.round(r.elapsedMs / 1000)} ثانية {r.assisted ? '· بمساعدة' : ''}
+                  وقت الحل: {Math.round(r.elapsedMs / 1000)} ثانية {r.assisted ? '· بمساعدة' : ''}
                 </span>
               </div>
               <h3>{r.prompt}</h3>

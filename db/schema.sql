@@ -133,3 +133,7 @@ ALTER TABLE mentor_activities ADD COLUMN IF NOT EXISTS position integer NOT NULL
 ALTER TABLE mentor_activities ADD COLUMN IF NOT EXISTS flagged boolean NOT NULL DEFAULT false;
 ALTER TABLE mentor_activities ADD COLUMN IF NOT EXISTS guide_step integer NOT NULL DEFAULT 0;
 CREATE INDEX IF NOT EXISTS mentor_batch_owner ON mentor_batches(participant_id,created_at DESC);
+
+-- Solving time is independent of an answer (skipped exam questions still take time).
+ALTER TABLE mentor_activities ADD COLUMN IF NOT EXISTS solving_ms integer NOT NULL DEFAULT 0 CHECK(solving_ms BETWEEN 0 AND 3600000);
+ALTER TABLE mentor_activities ADD COLUMN IF NOT EXISTS content_set integer NOT NULL DEFAULT 0;

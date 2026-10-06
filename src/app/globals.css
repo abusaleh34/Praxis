@@ -2993,3 +2993,29 @@ textarea {
     padding: 16px;
   }
 }
+
+.lab-visual-stack {
+  min-width: 0;
+}
+.lab-visual-stack .socratic-box {
+  margin: 12px 0 0;
+}
+.lesson-outline {
+  margin: 12px 0;
+}
+.lesson-outline summary {
+  cursor: pointer;
+  padding: 10px 0;
+  color: var(--green);
+}
+@media (max-width: 600px) {
+  .lab-grid {
+    gap: 18px;
+  }
+  .lab-visual-stack .socratic-box {
+    padding: 14px;
+  }
+  .lab-visual-stack .socratic-box h3 {
+    margin: 8px 0;
+  }
+}

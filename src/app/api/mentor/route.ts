@@ -9,6 +9,7 @@ import {
   finishMentor,
   answerGuide,
   flagMentor,
+  saveMentorTime,
 } from '@/lib/mentor';
 import { readiness } from '@/lib/readiness';
 import { db } from '@/lib/db';
@@ -42,7 +43,6 @@ async function handle(req: NextRequest) {
     if (process.env.PRAXIS_MODE === 'waitlist') throw new ApiError(403, 'التدريب لم يفتح بعد.');
     if (process.env.PRAXIS_MODE === 'pilot' && !(await readiness()).ready)
       throw new ApiError(503, 'التجربة متوقفة للمراجعة.');
-    await limit('mentor-action:' + p.id, 600);
     const text = await req.text();
     if (text.length > 3000) throw new ApiError(413, 'الطلب كبير.');
     const d = z
@@ -59,6 +59,11 @@ async function handle(req: NextRequest) {
           elapsedMs: z.number().int().min(0).max(3600000),
           reveal: z.boolean().default(false),
         }),
+        z.object({
+          action: z.literal('time'),
+          id: z.string().uuid(),
+          elapsedMs: z.number().int().min(0).max(3600000),
+        }),
         z.object({ action: z.literal('hint'), id: z.string().uuid() }),
         z.object({
           action: z.literal('guide'),
@@ -70,9 +75,15 @@ async function handle(req: NextRequest) {
         z.object({ action: z.literal('finish'), id: z.string().uuid() }),
       ])
       .parse(JSON.parse(text));
+    // Background time saves must not consume the student's answer/hint allowance.
+    await limit(
+      (d.action === 'time' ? 'mentor-time:' : 'mentor-action:') + p.id,
+      d.action === 'time' ? 1200 : 600,
+    );
     if (d.action === 'start') return send(await startMentor(p.id, d.lesson, d.mode));
     if (d.action === 'answer')
       return send(await answerMentor(p.id, d.id, d.choice, d.elapsedMs, d.reveal));
+    if (d.action === 'time') return send(await saveMentorTime(p.id, d.id, d.elapsedMs));
     if (d.action === 'hint') return send(await hintMentor(p.id, d.id));
     if (d.action === 'guide') return send(await answerGuide(p.id, d.id, d.index, d.choice));
     if (d.action === 'flag') return send(await flagMentor(p.id, d.id, d.flagged));
